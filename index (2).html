@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veterinary Rx Label Maker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#c8d4e8;--surface:#ffffff;--surface2:#f0f4fb;--border:#d5daea;--border2:#b0bad4;
+  --text:#1a1f2e;--text2:#4a5468;--text3:#8892a4;
+  --teal:#2d5be3;--teal-light:#eef2fd;--teal-mid:#b8c8f5;
+  --amber:#b45309;--amber-light:#fef3c7;
+  --red:#b91c1c;--red-light:#fee2e2;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 2px 8px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.header{background:#1a2744;color:#fff;padding:14px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.site-title{font-size:16px;font-weight:600;letter-spacing:-.02em}
+.site-title span{color:#a8c4f0;font-family:'DM Mono',monospace;font-size:11px;font-weight:400;display:block;opacity:.9}
+.main{max-width:1400px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+@media(max-width:860px){.main{grid-template-columns:1fr}}
+
+/* Panel */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.panel-body{padding:16px}
+
+/* Tabs */
+.tab-row{display:flex;gap:4px;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.tab-btn{flex:1;padding:6px 8px;border:none;border-radius:6px;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab-btn.active{background:var(--text);color:#fff}
+
+/* Fields */
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:4px}
+input[type=text],input[type=date],input[type=number],select,textarea{
+  width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;
+  transition:border-color .15s;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b6860' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px}
+textarea{resize:vertical;min-height:60px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Drug search */
+.drug-search-wrap{position:relative}
+.drug-search-wrap input{padding-right:32px}
+.drug-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:0}
+.drug-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);max-height:220px;overflow-y:auto;z-index:50;display:none}
+.drug-dropdown.show{display:block}
+.drug-opt{padding:7px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)}
+.drug-opt:last-child{border-bottom:none}
+.drug-opt:hover{background:var(--teal-light)}
+.drug-opt-name{font-weight:600;color:var(--text)}
+.drug-opt-alias{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.drug-opt-cat{font-size:10px;color:var(--teal);font-weight:500}
+
+/* Auto-instruction box */
+.auto-instr-box{background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:11px}
+.auto-instr-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--teal);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.auto-instr-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);line-height:1.6}
+.use-btn{font-size:11px;padding:3px 9px;border-radius:5px;border:1px solid var(--teal-mid);background:var(--teal);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500}
+.use-btn:hover{background:#0a6657}
+
+/* Dose hint */
+.dose-hint{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:3px;padding:4px 8px;background:var(--teal-light);border-radius:4px;display:none}
+
+/* Checkbox */
+.check-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--teal)}
+.check-row label{font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;font-weight:400}
+
+/* Buttons */
+.btn-row{display:flex;gap:8px;margin-top:14px}
+.btn{padding:8px 16px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:1px solid var(--border2);background:var(--surface2);color:var(--text);transition:all .15s}
+.btn:hover{border-color:var(--border2);background:var(--border)}
+.btn-primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn-primary:hover{background:#0a6657}
+.btn-danger{background:#c0392b;color:#fff;border-color:#922b21;font-weight:600}
+.btn-danger:hover{background:#922b21;border-color:#7b241c}
+.start-btn{padding:5px 11px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all .15s}
+.start-btn:hover{border-color:var(--teal);color:var(--teal)}
+.start-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.split-btn{padding:5px 4px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all .15s;text-align:center}
+.split-btn:hover{border-color:var(--teal);color:var(--teal)}
+.split-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+/* ── Label Preview ── */
+/* DYMO 30324: 70mm wide × 54mm tall = 2.756" × 2.126" */
+.label-preview-wrap{padding:16px;display:flex;flex-direction:column;align-items:center}
+.label-preview{
+  background:#fff;border:2px solid #000;border-radius:2px;
+  padding:5px 8px;font-family:'Courier New',Courier,monospace;color:#000;
+  width:2.756in;height:2.126in;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);flex-shrink:0;
+  display:flex;flex-direction:column;gap:0;font-weight:bold
+}
+.lp-divider{border:none;border-top:1px solid #000;margin:3px 0}
+.lp-section-clinic{margin-bottom:1px}
+.lp-clinic-name{font-size:9px;font-weight:bold;text-align:center;text-transform:uppercase;letter-spacing:.3px;line-height:1.3;color:#000}
+.lp-clinic-sub{font-size:7.5px;text-align:center;color:#000;line-height:1.3;font-weight:bold}
+.lp-section-patient{margin-bottom:1px}
+.lp-section-drug{display:flex;flex-direction:column;flex:1;min-height:0}
+.lp-drug{font-size:11px;font-weight:bold;margin-bottom:1px;line-height:1.2;color:#000}
+.lp-sub{font-size:8px;margin-bottom:1px;color:#000;line-height:1.2;font-weight:bold}
+.lp-line{font-size:9.5px;margin-bottom:1px;color:#000;line-height:1.25;font-weight:bold}
+.lp-instr{font-size:8px;color:#000;line-height:1.45;flex:1;overflow:hidden;font-weight:bold;margin-top:4px}
+.lp-warn{font-size:7px;font-weight:bold;text-align:center;border:2px solid #000;padding:2px 4px;letter-spacing:.3px;margin-top:3px;flex-shrink:0;color:#000;white-space:nowrap;overflow:hidden}
+.lp-dates-row{display:flex;justify-content:space-between;margin-top:2px;flex-shrink:0}
+.lp-dates-row span{font-size:9px;color:#000;font-weight:bold}
+.preview-hint{font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.6;max-width:340px}
+.print-steps{margin-top:14px;background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:var(--radius-sm);padding:10px 13px;width:100%}
+.print-steps-title{font-size:11px;font-weight:600;color:var(--teal);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
+.print-step{font-size:11px;color:var(--text2);margin-bottom:4px;display:flex;gap:7px;line-height:1.4}
+.print-step-num{font-weight:700;color:var(--teal);flex-shrink:0}
+
+/* Print styles — DYMO 30324: 70mm wide × 54mm tall */
+@media print{
+  @page{
+    size: 2.756in 2.126in;
+    margin: 0;
+  }
+  body{background:#fff;margin:0;padding:0;overflow:hidden}
+  /* Hide absolutely everything except the label preview div */
+  body > *{display:none!important}
+  .main{display:block!important}
+  .main > *{display:none!important}
+  .main > div:last-child{display:block!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0!important;position:fixed!important;top:0!important;left:0!important}
+  .label-preview-wrap{display:block!important;padding:0!important;margin:0!important;align-items:unset!important}
+  /* Hide slider, print steps, everything inside right panel except the label */
+  .label-preview-wrap > *{display:none!important}
+  .label-preview-wrap > #labelPreview{display:flex!important}
+  .label-preview{
+    width:2.756in!important;height:2.126in!important;
+    border:none!important;box-shadow:none!important;
+    margin:0!important;padding:5px 8px!important;
+    font-size:100%!important;overflow:hidden!important;
+    position:fixed!important;top:0!important;left:0!important;
+  }
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div class="site-title">Veterinary Rx Label Maker
+      <span>● Auto-generates instructions from drug + dose</span>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+<!-- ── LEFT PANEL: Form ── -->
+<div class="panel">
+  <div class="panel-header">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Label Information
+  </div>
+  <div class="panel-body">
+
+    <!-- SECTION HEADERS style -->
+    <style>
+    .sec-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--teal);padding:6px 10px;background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:var(--radius-sm);margin-bottom:10px;margin-top:4px}
+    .sec-head:first-child{margin-top:0}
+    .top-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px}
+    .top-cols .sec-head{margin-top:0}
+    @media(max-width:700px){.top-cols{grid-template-columns:1fr}}
+    </style>
+
+    <!-- ── TOP ROW: Clinic + Patient side by side ── -->
+    <div class="top-cols">
+
+      <!-- CLINIC -->
+      <div>
+        <div class="sec-head">🏥 Clinic</div>
+        <div class="field">
+          <label>Clinic name</label>
+          <input type="text" id="clinicName" value="Pinellas County Animal Services" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Address</label>
+          <input type="text" id="clinicAddr" value="12450 Ulmerton Rd. Largo, FL 33774" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="text" id="clinicPhone" value="727-582-2600" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Veterinarian</label>
+          <select id="vetSelect" onchange="handleVetSelect()">
+            <option value="">— Select —</option>
+            <option value="Dr. Asher">Dr. Asher</option>
+            <option value="Dr. Gallas">Dr. Gallas</option>
+            <option value="other">Other (type below)</option>
+          </select>
+        </div>
+        <div class="field" id="vetOtherWrap" style="display:none">
+          <label>Vet name (other)</label>
+          <input type="text" id="vetOther" placeholder="e.g. Dr. Jane Smith, DVM" oninput="updatePreview()">
+        </div>
+      </div>
+
+      <!-- PATIENT -->
+      <div>
+        <div class="sec-head">🐾 Patient</div>
+        <div class="field">
+          <label>Patient name</label>
+          <input type="text" id="patientName" placeholder="e.g. Max" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Species</label>
+          <select id="species" onchange="updatePreview()">
+            <option value=""></option><option>Canine</option><option>Feline</option>
+            <option>Equine</option><option>Avian</option><option>Rabbit</option>
+            <option>Ferret</option><option>Reptile</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Owner name</label>
+          <input type="text" id="ownerName" value="PCAS" oninput="updatePreview()">
+        </div>
+      </div>
+
+    </div><!-- /top-cols -->
+
+    <!-- ── SECTION 3: MEDICATION ── -->
+    <div class="sec-head">💊 Medication</div>
+    <div class="field">
+      <label>Search or select medication</label>
+      <div class="drug-search-wrap">
+        <input type="text" id="drugSearch" placeholder="Type drug name..." autocomplete="new-password" oninput="filterDrugs()" onfocus="showDropdown()" onblur="setTimeout(hideDropdown,200)">
+        <button class="drug-search-clear" onclick="clearDrug()" title="Clear">×</button>
+        <div class="drug-dropdown" id="drugDropdown"></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Strength / dose</label>
+        <select id="doseSelect" onchange="handleDoseSelect()">
+          <option value="">— select drug first —</option>
+        </select>
+        <div id="doseManualWrap" style="display:none;margin-top:5px">
+          <input type="text" id="doseManual" placeholder="e.g. 37.5mg" oninput="updateAll()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Form</label>
+        <select id="form" onchange="updateFormDoseUI()">
+          <option>Tablet</option><option>Capsule</option><option>Chewable tablet</option>
+          <option>Liquid</option><option>Suspension</option>
+          <option>Ointment</option><option>Cream</option><option>Lotion</option>
+          <option>Eye drops</option><option>Ear drops</option>
+          <option>Patch</option><option>Powder</option>
+          <option>Transdermal</option><option>Spray</option><option>Topical</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label id="doseQtyLabel"># of tablets + split per dose</label>
+
+      <!-- TABLET / CAPSULE mode -->
+      <div id="tabletDoseWrap">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:2px">
+          <button type="button" class="split-btn" id="tc-0" onclick="setTabletCount(0)">0</button>
+          <button type="button" class="split-btn active" id="tc-1" onclick="setTabletCount(1)">1</button>
+          <button type="button" class="split-btn" id="tc-2" onclick="setTabletCount(2)">2</button>
+          <button type="button" class="split-btn" id="tc-3" onclick="setTabletCount(3)">3</button>
+          <button type="button" class="split-btn" id="tc-4" onclick="setTabletCount(4)">4</button>
+          <button type="button" class="split-btn" id="tc-5" onclick="setTabletCount(5)">5</button>
+          <button type="button" class="split-btn" id="tc-6" onclick="setTabletCount(6)">6</button>
+          <button type="button" class="split-btn" id="tc-custom" onclick="setTabletCount('custom')">Other</button>
+        </div>
+        <div id="tcCustomWrap" style="display:none;margin-top:5px">
+          <input type="number" id="tcCustom" placeholder="e.g. 7" min="0" step="1" oninput="updateAll()">
+        </div>
+      </div>
+
+      <!-- EYE DROPS mode — 1-2 drops -->
+      <div id="eyeDropsWrap" style="display:none;margin-top:4px">
+        <div style="font-size:12px;color:var(--teal);font-weight:500">1-2 drops per application</div>
+      </div>
+
+      <!-- EAR DROPS mode — stepper for drops -->
+      <div id="earDropsWrap" style="display:none;margin-top:4px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:4px">Number of drops per ear</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button type="button" class="split-btn" onclick="changeDrops(-1)" style="font-size:16px;padding:4px 12px">−</button>
+          <span id="dropsDisplay" style="font-size:18px;font-weight:600;color:var(--teal);min-width:32px;text-align:center">4</span>
+          <button type="button" class="split-btn" onclick="changeDrops(1)" style="font-size:16px;padding:4px 12px">+</button>
+          <span style="font-size:12px;color:var(--text2)">drops</span>
+        </div>
+        <input type="hidden" id="dropsCount" value="4">
+      </div>
+
+      <!-- LIQUID / SUSPENSION mode -->
+      <div id="mlFieldWrap" style="display:none;margin-top:4px">
+        <input type="text" id="fluidAmt" placeholder="e.g. 2 ml, 0.5 ml" oninput="updateAll()">
+      </div>
+
+      <!-- OINTMENT — small amount note -->
+      <div id="ointmentEyeWrap" style="display:none;margin-top:4px">
+        <div style="font-size:12px;color:var(--teal);font-weight:500">Apply a small amount per application</div>
+      </div>
+
+      <!-- NO DOSE — creams, lotions, topicals, sprays, powder -->
+      <div id="noDoseWrap" style="display:none;margin-top:4px;font-size:12px;color:var(--text2);padding:6px 0;font-style:italic">
+        Apply as directed — no fixed dose amount needed
+      </div>
+
+      <!-- EYE SIDE selector — shown for all eye meds -->
+      <div id="eyeSideWrap" style="display:none;margin-top:8px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:4px">Which eye(s)</label>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="split-btn" id="eye-right" onclick="setEye('Right eye')">Right</button>
+          <button type="button" class="split-btn" id="eye-left" onclick="setEye('Left eye')">Left</button>
+          <button type="button" class="split-btn active" id="eye-both" onclick="setEye('Both eyes')">Both</button>
+        </div>
+        <input type="hidden" id="eyeSide" value="Both eyes">
+      </div>
+
+      <!-- EAR SIDE selector — shown for all ear meds -->
+      <div id="earSideWrap" style="display:none;margin-top:8px">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:4px">Which ear(s)</label>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="split-btn" id="ear-right" onclick="setEar('Right ear')">Right</button>
+          <button type="button" class="split-btn" id="ear-left" onclick="setEar('Left ear')">Left</button>
+          <button type="button" class="split-btn active" id="ear-both" onclick="setEar('Both ears')">Both</button>
+        </div>
+        <input type="hidden" id="earSide" value="Both ears">
+      </div>
+    </div>
+
+    <!-- Split — tablets/capsules only -->
+    <div class="field" id="splitWrap">
+      <label>+ additional split</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+        <button type="button" class="split-btn active" id="split-whole" onclick="setSplit('whole')">None</button>
+        <button type="button" class="split-btn" id="split-half" onclick="setSplit('half')">+ 1/2</button>
+        <button type="button" class="split-btn" id="split-quarter" onclick="setSplit('quarter')">+ 1/4</button>
+        <button type="button" class="split-btn" id="split-threequarter" onclick="setSplit('threequarter')">+ 3/4</button>
+      </div>
+      <div id="precutWrap" style="display:none;margin-top:7px;background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:7px 10px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:6px">Pre-cut status</div>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-bottom:4px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);font-weight:400">
+          <input type="radio" name="precut" id="precut-no" value="no" checked onchange="updateAll()" style="width:14px;height:14px;accent-color:var(--teal)">
+          Tablets not yet cut — owner must cut
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);font-weight:400">
+          <input type="radio" name="precut" id="precut-yes" value="yes" onchange="updateAll()" style="width:14px;height:14px;accent-color:var(--teal)">
+          Tablets already pre-cut
+        </label>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Frequency</label>
+        <select id="freq" onchange="handleFreqSelect()">
+          <option value="">—</option>
+          <option>Once daily (q24h)</option>
+          <option>Twice daily (q12h)</option>
+          <option>Three times daily (q8h)</option>
+          <option>Four times daily (q6h)</option>
+          <option>Every 48 hours (q48h)</option>
+          <option>Every 72 hours (q72h)</option>
+          <option>Once weekly</option>
+          <option>Once monthly</option>
+          <option>As needed (PRN)</option>
+          <option>Once</option>
+          <option value="other">Other (type below)</option>
+        </select>
+        <div id="freqOtherWrap" style="display:none;margin-top:5px">
+          <input type="text" id="freqOther" placeholder="e.g. Every 3 days..." oninput="updateAll()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Duration</label>
+        <select id="duration" onchange="handleDurationSelect()">
+          <option value="">—</option>
+          <option>1 day</option><option>3 days</option><option>5 days</option>
+          <option>7 days</option><option>10 days</option><option>14 days</option>
+          <option>21 days</option><option>30 days</option><option>60 days</option>
+          <option>90 days</option><option>Monthly</option><option>Ongoing</option>
+          <option value="other">Other (type below)</option>
+        </select>
+        <div id="durationOtherWrap" style="display:none;margin-top:5px">
+          <input type="text" id="durationOther" placeholder="e.g. 6 weeks, 4 months..." oninput="updateAll()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-generated instruction box -->
+    <div class="auto-instr-box" id="autoInstrBox" style="display:none">
+      <div class="auto-instr-label">
+        Auto-generated instruction
+        <button class="use-btn" onclick="useAutoInstr()">Use this ↓</button>
+      </div>
+      <div class="auto-instr-text" id="autoInstrText"></div>
+    </div>
+
+    <div class="field">
+      <label>Instructions (editable)</label>
+      <textarea id="instructions" placeholder="Instructions will auto-generate, or type your own..." oninput="updatePreview()"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Start time</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="start-btn" id="stn-tonight" onclick="setStart('tonight')">Tonight</button>
+        <button type="button" class="start-btn" id="stn-tomorrow-am" onclick="setStart('tomorrow-am')">Tomorrow AM</button>
+        <button type="button" class="start-btn" id="stn-tomorrow-pm" onclick="setStart('tomorrow-pm')">Tomorrow PM</button>
+        <button type="button" class="start-btn" id="stn-date" onclick="setStart('date')">Pick date</button>
+      </div>
+      <div id="startDateWrap" style="display:none;margin-top:6px">
+        <input type="date" id="startDate" onchange="updatePreview()">
+      </div>
+      <input type="hidden" id="startMode" value="">
+    </div>
+
+    <div class="field">
+      <label style="display:flex;justify-content:space-between;align-items:center">
+        <span id="qtyLabel">Total quantity dispensed</span>
+        <span id="qtyCalcBadge" style="display:none;font-size:10px;font-weight:600;background:var(--teal-light);color:var(--teal);border:1px solid var(--teal-mid);border-radius:10px;padding:1px 8px">auto-calculated</span>
+      </label>
+      <!-- Standard text qty — tablets, ml, etc. -->
+      <input type="text" id="qty" placeholder="Auto-calculated — or type your own" oninput="onQtyManualEdit()" style="margin-bottom:4px">
+      <!-- Packet qty dropdown — shown for Fenbendazole Granules -->
+      <div id="packetQtyWrap" style="display:none;margin-bottom:4px">
+        <select id="packetQty" onchange="onPacketQtySelect()">
+          <option value="">— Number of packets —</option>
+          <option value="1 packet">1 packet</option>
+          <option value="2 packets">2 packets</option>
+          <option value="3 packets">3 packets</option>
+          <option value="4 packets">4 packets</option>
+          <option value="5 packets">5 packets</option>
+          <option value="6 packets">6 packets</option>
+          <option value="7 packets">7 packets</option>
+          <option value="8 packets">8 packets</option>
+          <option value="9 packets">9 packets</option>
+          <option value="10 packets">10 packets</option>
+        </select>
+      </div>
+      <!-- Container selector — ointments, creams, drops -->
+      <div id="containerWrap" style="display:none">
+        <select id="containerSelect" onchange="onContainerSelect()">
+          <option value="">— select container —</option>
+        </select>
+        <div id="containerCustomWrap" style="display:none;margin-top:5px">
+          <input type="text" id="containerCustom" placeholder="e.g. 2 tubes" oninput="onContainerCustom()">
+        </div>
+      </div>
+      <div id="qtyCalcNote" style="display:none;font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;padding:4px 8px;background:var(--teal-light);border-radius:4px"></div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Date dispensed</label>
+        <input type="date" id="rxDate" onchange="onDispensedChange()">
+      </div>
+      <div class="field">
+        <label>Expiration date</label>
+        <input type="date" id="expDate" onchange="updatePreview()">
+      </div>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="keepAway" onchange="updatePreview()" checked>
+      <label for="keepAway">For Veterinary Use Only. Keep Out Of Reach Of Children</label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="copyBtn" onclick="copyLabelText()" style="background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid)">📋 Copy label text</button>
+      <button class="btn btn-danger" onclick="clearAll()">Clear all</button>
+    </div>
+  </div>
+</div><!-- /left panel -->
+
+<!-- ── RIGHT PANEL: Preview + Controls ── -->
+<div class="panel" style="position:sticky;top:72px;align-self:start">
+  <div class="panel-header">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Live Preview — DYMO 30324
+  </div>
+  <div class="label-preview-wrap">
+    <div class="label-preview" id="labelPreview">
+
+      <!-- TOP: Clinic info -->
+      <div class="lp-section-clinic">
+        <div class="lp-clinic-name" id="prev-clinic-name">Pinellas County Animal Services</div>
+        <div class="lp-clinic-sub" id="prev-clinic-addr">12450 Ulmerton Rd. Largo, FL 33774</div>
+        <div class="lp-clinic-sub" id="prev-clinic-phone-vet"></div>
+        <div class="lp-divider"></div>
+      </div>
+
+      <!-- MIDDLE: Patient info -->
+      <div class="lp-section-patient">
+        <div class="lp-line" id="prev-patient"></div>
+        <div class="lp-line" id="prev-owner"></div>
+        <div class="lp-divider"></div>
+      </div>
+
+      <!-- MEDICATION -->
+      <div class="lp-section-drug" style="flex:1">
+        <div class="lp-drug" id="prev-drug">Drug Name — Dose — Form</div>
+        <div class="lp-sub" id="prev-sub"></div>
+        <div class="lp-instr" id="prev-instr">Instructions will appear here</div>
+      </div>
+
+      <!-- BOTTOM: dates then warning very last -->
+      <div class="lp-dates-row">
+        <span id="prev-date"></span>
+        <span id="prev-expdate"></span>
+      </div>
+      <div class="lp-warn" id="prev-warn">VETERINARY USE ONLY — KEEP OUT OF REACH OF CHILDREN</div>
+
+    </div>
+
+
+    <div class="print-steps">
+      <div class="print-steps-title">🖨 How to print — 3 steps</div>
+      <div class="print-step"><span class="print-step-num">1.</span>Fill out all fields → click <strong>Copy label text</strong></div>
+      <div class="print-step"><span class="print-step-num">2.</span>Switch to DYMO Connect → right-click inside the text box → <strong>Paste</strong> (or Ctrl+A then Ctrl+V to replace existing text)</div>
+      <div class="print-step"><span class="print-step-num">3.</span>Click <strong>Print</strong> in DYMO Connect — done!</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--teal-mid)">
+        <div class="print-steps-title" style="margin-bottom:6px">⚙ One-time DYMO Connect setup</div>
+        <div class="print-step"><span class="print-step-num">1.</span>Open DYMO Connect → <strong>New Label</strong></div>
+        <div class="print-step"><span class="print-step-num">2.</span>Select <strong>30324 Large Multipurpose</strong></div>
+        <div class="print-step"><span class="print-step-num">3.</span>Click the <strong>Text</strong> tool and drag a box that fills the entire label</div>
+        <div class="print-step"><span class="print-step-num">4.</span>In the text box properties, set font to <strong>Courier New, Bold, 8pt</strong></div>
+        <div class="print-step"><span class="print-step-num">5.</span><strong>File → Save As</strong> → name it <strong>VetRx</strong> → save to Desktop</div>
+        <div class="print-step"><span class="print-step-num">6.</span>Next time: just double-click <strong>VetRx.label</strong> on Desktop to open it ready to paste</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /main -->
+
+<script>
+// ── DRUG DATABASE ─────────────────────────────
+const DRUGS = [
+  // A
+  {name:'Acepromazine',alias:'PromAce',cat:'Sedation',forms:['Tablet'],doses:['5mg','10mg','25mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq} as directed. Keep animal quiet after administration.'},
+  {name:'Amlodipine',alias:'Norvasc',cat:'Cardiac',forms:['Tablet'],doses:['0.625mg','1.25mg','2.5mg','5mg','10mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Give at the same time each day.'},
+  {name:'Amoxicillin',alias:'Amoxil',cat:'Antibiotic',forms:['Capsule','Tablet','Liquid'],doses:['62.5mg','125mg','250mg','500mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food. Complete the full course.'},
+  {name:'Amoxicillin-Clavulanate',alias:'Clavamox',cat:'Antibiotic',forms:['Tablet','Liquid'],doses:['62.5mg','125mg','250mg','375mg','62.5mg/ml'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food. Complete the full course.'},
+  {name:'Animax Ointment',alias:'Nystatin / Neomycin / Triamcinolone',cat:'Topical / Ear',forms:['Ointment'],doses:['N/A'],unit:'',instr:'Apply a thin layer to affected area {freq}{dur}. For ear use: instill as directed and massage gently.'},
+  {name:'Apoquel',alias:'Oclacitinib',cat:'Dermatology',forms:['Tablet'],doses:['3.6mg','5.4mg','16mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. May be given with or without food.'},
+  {name:'Artificial Tears',alias:'Lubricant Eye Drops',cat:'Eye',forms:['Eye drops'],doses:['N/A'],unit:'',instr:'Apply 1-2 drops to affected eye(s) {freq} as needed for lubrication and comfort.'},
+  {name:'Atenolol',alias:'Tenormin',cat:'Cardiac',forms:['Tablet'],doses:['6.25mg','12.5mg','25mg','50mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Do not stop suddenly. Give at the same time each day.'},
+  {name:'Atropine Ophthalmic',alias:'Atropine 1% Eye Drops',cat:'Eye',forms:['Eye drops'],doses:['1%'],unit:'',instr:'Apply 1 drop to affected eye {freq} as directed. May cause dilated pupil and sensitivity to light.'},
+  {name:'Azithromycin',alias:'Zithromax',cat:'Antibiotic',forms:['Tablet','Liquid'],doses:['100mg','250mg','500mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. May be given with or without food.'},
+  // B
+  {name:'Baytril Otic',alias:'Enrofloxacin / Silver Sulfadiazine Ear',cat:'Ear',forms:['Ear drops'],doses:['5ml','10ml','15ml','30ml'],unit:'ml',instr:'Apply {qty} drops to affected ear(s) {freq}{dur}. Gently massage ear base after application.'},
+  {name:'BNP Ophthalmic',alias:'Bacitracin / Neomycin / Polymyxin B Eye',cat:'Eye',forms:['Eye drops','Ointment'],doses:['N/A'],unit:'',instr:'Apply a small amount to affected eye(s) {freq}{dur}. Pull lower eyelid down gently and apply inside.'},
+  {name:'BNP + Dexamethasone Ophthalmic',alias:'Neomycin / Polymyxin / Dex Eye',cat:'Eye',forms:['Eye drops','Ointment'],doses:['N/A'],unit:'',instr:'Apply to affected eye(s) {freq}{dur}. Do NOT use if corneal ulcer is present — confirm with vet first.'},
+  {name:'Buprenorphine',alias:'Buprenex',cat:'Pain',forms:['Liquid'],doses:['0.3mg/ml'],unit:'mg/ml',instr:'Administer {qty} as directed by your veterinarian {freq}{dur}. DEA controlled substance — keep secure.'},
+  // C
+  {name:'Carprofen',alias:'Rimadyl',cat:'Pain / NSAID',forms:['Chewable tablet','Tablet'],doses:['25mg','75mg','100mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food. Do not combine with steroids or other NSAIDs.'},
+  {name:'Cefpodoxime',alias:'Simplicef',cat:'Antibiotic',forms:['Tablet'],doses:['100mg','200mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food.'},
+  {name:'Cephalexin',alias:'Keflex',cat:'Antibiotic',forms:['Capsule','Tablet'],doses:['250mg','500mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food to reduce stomach upset.'},
+  {name:'Cerenia',alias:'Maropitant',cat:'GI / Antiemetic',forms:['Tablet'],doses:['16mg','24mg','60mg','160mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} on an empty stomach, at least 1 hour before feeding.'},
+  {name:'Chloramphenicol',alias:'Chloromycetin',cat:'Antibiotic',forms:['Tablet','Capsule'],doses:['250mg','500mg','1000mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Wear gloves when handling — wash hands after.'},
+  {name:'Ciprofloxacin',alias:'Cipro',cat:'Antibiotic',forms:['Tablet'],doses:['250mg','500mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}.'},
+  {name:'Clindamycin',alias:'Antirobe',cat:'Antibiotic',forms:['Capsule','Tablet','Liquid'],doses:['25mg','75mg','150mg','300mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food and water to prevent esophageal irritation.'},
+  {name:'Clomipramine',alias:'Clomicalm',cat:'Behavior',forms:['Tablet'],doses:['5mg','20mg','40mg','80mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food. Allow 4-6 weeks for full effect.'},
+  {name:'Clonidine',alias:'Catapres',cat:'Behavior',forms:['Tablet'],doses:['0.025mg','0.05mg','0.1mg','0.2mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Give 1-2 hours before anticipated stressful event.'},
+  {name:'Cyclosporine',alias:'Atopica',cat:'Dermatology',forms:['Capsule','Liquid'],doses:['10mg','25mg','50mg','100mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} on an empty stomach, 2 hours before or after feeding.'},
+  // D
+  {name:'Deracoxib',alias:'Deramaxx',cat:'Pain / NSAID',forms:['Chewable tablet'],doses:['12mg','25mg','75mg','100mg'],unit:'mg',instr:'Give {qty} chewable tablet by mouth {freq}{dur} with food.'},
+  {name:'Dexamethasone',alias:'Decadron',cat:'Steroid',forms:['Tablet'],doses:['0.5mg','1mg','2mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food. Do not combine with NSAIDs.'},
+  {name:'Diazepam',alias:'Valium',cat:'Neurology',forms:['Tablet'],doses:['2mg','5mg','10mg'],unit:'mg',instr:'Give {qty} tablet as directed. DEA controlled substance — keep secure and log each dose.'},
+  {name:'Digoxin',alias:'Lanoxin',cat:'Cardiac',forms:['Tablet','Liquid'],doses:['0.0625mg','0.125mg','0.25mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} at the same time each day. Contact clinic if vomiting occurs.'},
+  {name:'Diphenhydramine',alias:'Benadryl',cat:'Dermatology',forms:['Tablet'],doses:['12.5mg','25mg','50mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Use plain formula only — no decongestants. May cause sedation.'},
+  {name:'Doxycycline',alias:'Vibramycin',cat:'Antibiotic',forms:['Tablet','Capsule','Liquid'],doses:['50mg','100mg','200mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Always follow with food and water. Do not give on empty stomach.'},
+  // E
+  {name:'Enalapril',alias:'Enacard',cat:'Cardiac',forms:['Tablet'],doses:['1mg','2.5mg','5mg','10mg','20mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. May be given with or without food.'},
+  {name:'Enrofloxacin',alias:'Baytril',cat:'Antibiotic',forms:['Tablet'],doses:['22.7mg','68mg','136mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food. Avoid dairy or antacids within 2 hours.'},
+  {name:'Entyce',alias:'Capromorelin',cat:'GI / Antiemetic',forms:['Liquid'],doses:['30mg/ml'],unit:'mg/ml',instr:'Give as directed by mouth {freq}{dur}. Shake well. May be given with or without food.'},
+  {name:'Erythromycin Ophthalmic',alias:'Ilotycin Eye Ointment',cat:'Eye',forms:['Ointment'],doses:['0.5%'],unit:'',instr:'Apply a small ribbon of ointment to affected eye(s) {freq}{dur}. Pull lower lid down and apply inside.'},
+  // F
+  {name:'Famotidine',alias:'Pepcid',cat:'GI / Antiemetic',forms:['Tablet'],doses:['10mg','20mg','40mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. May be given with or without food.'},
+  {name:'Fenbendazole',alias:'Panacur',cat:'Antiparasitic',forms:['Liquid','Powder'],doses:['100mg/ml','222mg/g'],unit:'mg/ml',instr:'Give as directed by mouth {freq}{dur} mixed with food.'},
+  {name:'Fenbendazole Granules',alias:'Panacur Granules',cat:'Antiparasitic',forms:['Powder'],doses:['other'],unit:'',instr:'Mix 1 packet into food {freq}{dur}. Packet has been pre-measured based on your pet\'s weight. Give with food. Complete the full course.'},
+  {name:'Fluoxetine',alias:'Reconcile',cat:'Behavior',forms:['Tablet','Capsule'],doses:['8mg','10mg','20mg','40mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Allow 4-6 weeks for full effect.'},
+  {name:'Furosemide',alias:'Lasix',cat:'Cardiac',forms:['Tablet','Liquid'],doses:['12.5mg','20mg','40mg','50mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Ensure fresh water is available at all times.'},
+  // G
+  {name:'Gabapentin',alias:'Neurontin',cat:'Pain / Neuro',forms:['Capsule'],doses:['100mg','300mg','400mg','600mg'],unit:'mg',instr:'Give {qty} capsule by mouth {freq}{dur}. Use capsules only — liquid form contains xylitol.'},
+  {name:'Grapiprant',alias:'Galliprant',cat:'Pain / NSAID',forms:['Tablet'],doses:['20mg','60mg','100mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} on an empty stomach, at least 1 hour before feeding.'},
+  // H
+  {name:'Hydroxyzine',alias:'Vistaril',cat:'Dermatology',forms:['Tablet','Capsule'],doses:['10mg','25mg','50mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. May cause drowsiness.'},
+  // I
+  {name:'Itraconazole',alias:'Intrafungol',cat:'Antifungal',forms:['Liquid','Capsule'],doses:['10mg/ml','100mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with a fatty meal. Refrigerate liquid. Complete the full course.'},
+  // K
+  {name:'Iverhart Plus',alias:'Ivermectin / Pyrantel Pamoate',cat:'Antiparasitic',forms:['Chewable tablet'],doses:['68mcg/57mg','136mcg/114mg','272mcg/227mg'],unit:'mcg',instr:'Give {qty} chewable tablet by mouth {freq}. Give with or just after a meal. For dogs only — do not use in cats.'},
+  {name:'Ketoconazole',alias:'Nizoral',cat:'Antifungal',forms:['Tablet'],doses:['200mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food. Monitor for vomiting or jaundice.'},
+  {name:'Ketotifen Ophthalmic',alias:'Zaditor / Alaway Eye Drops',cat:'Eye',forms:['Eye drops'],doses:['0.025%'],unit:'',instr:'Apply 1 drop to affected eye(s) {freq}. For allergic eye irritation and itching.'},
+  // L
+  {name:'Lactulose',alias:'Enulose',cat:'GI / Antiemetic',forms:['Liquid'],doses:['10g/15ml'],unit:'ml',instr:'Give as directed by mouth {freq}{dur}. Mix with food if needed. Adjust to achieve 2-3 soft stools per day.'},
+  {name:'Levothyroxine',alias:'Soloxine',cat:'Endocrine',forms:['Tablet','Chewable tablet'],doses:['0.1mg','0.2mg','0.3mg','0.4mg','0.5mg','0.6mg','0.8mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} on an empty stomach, 1 hour before feeding.'},
+  // M
+  {name:'Marbofloxacin',alias:'Zeniquin',cat:'Antibiotic',forms:['Tablet'],doses:['25mg','50mg','100mg','200mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food.'},
+  {name:'Meloxicam',alias:'Metacam',cat:'Pain / NSAID',forms:['Liquid','Tablet'],doses:['1mg/ml','1.5mg/ml','5mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food. Do not give more than prescribed.'},
+  {name:'Methimazole',alias:'Tapazole',cat:'Endocrine',forms:['Tablet','Transdermal'],doses:['2.5mg','5mg','10mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Wear gloves when handling. Monitor for decreased appetite.'},
+  {name:'Methocarbamol',alias:'Robaxin',cat:'Pain',forms:['Tablet'],doses:['500mg','750mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food. May cause sedation.'},
+  {name:'Metoclopramide',alias:'Reglan',cat:'GI / Antiemetic',forms:['Tablet','Liquid'],doses:['5mg','10mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Give 30 minutes before feeding.'},
+  {name:'Metronidazole',alias:'Flagyl',cat:'Antibiotic',forms:['Tablet','Liquid'],doses:['250mg','500mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. May be given with food. Complete the full course.'},
+  {name:'Miconazole 1% Lotion',alias:'Miconazole Nitrate Lotion',cat:'Topical',forms:['Lotion'],doses:['1%'],unit:'',instr:'Apply a thin layer to affected skin {freq}{dur}. Allow to air dry. Avoid contact with eyes.'},
+  {name:'MiconaHex Wipes',alias:'Miconazole / Chlorhexidine Wipes',cat:'Topical',forms:['Topical'],doses:['N/A'],unit:'',instr:'Wipe affected skin area {freq}{dur}. Allow to air dry — do not rinse. Safe for skin folds and paws.'},
+  {name:'Milbemycin Oxime',alias:'Interceptor',cat:'Antiparasitic',forms:['Tablet','Chewable tablet'],doses:['2.3mg','5.75mg','11.5mg','23mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq} with food.'},
+  {name:'Minocycline',alias:'Minocin',cat:'Antibiotic',forms:['Capsule','Tablet'],doses:['50mg','100mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food and water.'},
+  {name:'Mirtazapine',alias:'Mirataz',cat:'GI / Antiemetic',forms:['Tablet','Transdermal'],doses:['3.75mg','7.5mg','15mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Stimulates appetite — offer food 1-2 hours after giving.'},
+  {name:'Mometamax',alias:'Gentamicin / Mometasone / Clotrimazole Ear',cat:'Ear',forms:['Ear drops'],doses:['7.5ml','15ml','30ml'],unit:'ml',instr:'Apply 4 drops to affected ear(s) {freq}{dur}. Gently massage ear base after application.'},
+  {name:'Mupirocin Ointment',alias:'Bactoderm 2%',cat:'Topical',forms:['Ointment'],doses:['2%'],unit:'',instr:'Apply a thin layer to affected skin {freq}{dur}. Do not use near eyes. For localized skin infections only.'},
+  // N
+  {name:'Neo-Predef Powder',alias:'Neomycin / Isoflupredone / Tetracaine',cat:'Topical',forms:['Powder'],doses:['N/A'],unit:'',instr:'Apply a light dusting to affected area {freq}{dur}. Keep dry and clean. Prevent licking — use e-collar if needed.'},
+  // O
+  {name:'Omeprazole',alias:'Prilosec',cat:'GI / Antiemetic',forms:['Capsule','Tablet'],doses:['10mg','20mg','40mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} on an empty stomach, 30 minutes before feeding.'},
+  {name:'Ondansetron',alias:'Zofran',cat:'GI / Antiemetic',forms:['Tablet'],doses:['4mg','8mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} as needed for nausea. May be given with or without food.'},
+  {name:'Osurnia',alias:'Florfenicol / Terbinafine / Betamethasone Ear',cat:'Ear',forms:['Ear drops'],doses:['N/A'],unit:'',instr:'Instill entire tube into affected ear(s) as directed. Second dose may be applied at day 7. Do not clean ears before application.'},
+  // P
+  {name:'Pentoxifylline',alias:'Trental',cat:'Dermatology',forms:['Tablet','Suspension'],doses:['100mg','400mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur}. Allow 4-8 weeks for full effect.'},
+  {name:'Phenobarbital',alias:'Luminal',cat:'Neurology',forms:['Tablet'],doses:['15mg','30mg','60mg','100mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Do not miss doses or stop suddenly. DEA controlled substance — keep secure.'},
+  {name:'Pimobendan',alias:'Vetmedin',cat:'Cardiac',forms:['Chewable tablet','Capsule'],doses:['1.25mg','2.5mg','5mg','10mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} approximately 1 hour BEFORE feeding. Timing is important.'},
+  {name:'Ponazuril',alias:'Marquis',cat:'Antiparasitic',forms:['Liquid'],doses:['50mg/ml'],unit:'mg/ml',instr:'Give as directed by mouth {freq}{dur}. Shake well before use. Give with a small amount of food.'},
+  {name:'Potassium Bromide',alias:'KBr',cat:'Neurology',forms:['Liquid'],doses:['250mg/ml'],unit:'mg/ml',instr:'Give as directed by mouth {freq}{dur} with food. Keep diet consistent — high salt reduces effectiveness.'},
+  {name:'Praziquantel',alias:'Droncit',cat:'Antiparasitic',forms:['Tablet'],doses:['34mg'],unit:'mg',instr:'Give {qty} tablet by mouth as a single dose with food. Repeat in 2-3 weeks if needed.'},
+  {name:'Pred Forte Ophthalmic',alias:'Prednisolone Acetate 1% Eye',cat:'Eye',forms:['Eye drops'],doses:['1%'],unit:'',instr:'Shake well. Apply 1 drop to affected eye(s) {freq}{dur}. Do NOT use with corneal ulcers present.'},
+  {name:'Prednisolone',alias:'Prednisolone',cat:'Steroid',forms:['Tablet','Liquid'],doses:['1mg','5mg','15mg/5ml','20mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with food. Do not stop abruptly. Do not combine with NSAIDs.'},
+  {name:'Prednisone',alias:'Deltasone',cat:'Steroid',forms:['Tablet'],doses:['1mg','2.5mg','5mg','10mg','20mg','50mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food. Taper as directed. Do not combine with NSAIDs.'},
+  {name:'Previcox',alias:'Firocoxib',cat:'Pain / NSAID',forms:['Chewable tablet'],doses:['57mg','227mg'],unit:'mg',instr:'Give {qty} chewable tablet by mouth {freq}{dur} with or without food.'},
+  {name:'Pyrantel Pamoate',alias:'Strongid',cat:'Antiparasitic',forms:['Liquid'],doses:['50mg/ml'],unit:'mg/ml',instr:'Give as directed by mouth. Shake well. Repeat in 2 weeks. Safe for puppies and kittens.'},
+  // S
+  {name:'Secnidazole',alias:'Flagentyl',cat:'Antibiotic',forms:['Liquid'],doses:['150mg/ml'],unit:'mg/ml',instr:'Give as directed by mouth as a single dose. Shake well before use.'},
+  {name:'Selamectin',alias:'Revolution',cat:'Antiparasitic',forms:['Topical'],doses:['15mg','30mg','60mg','120mg'],unit:'mg',instr:'Apply {qty} to the skin at the base of the neck {freq}. Part the hair and apply directly to skin. Do not bathe for 2 hours.'},
+  {name:'Sildenafil',alias:'Revatio',cat:'Cardiac',forms:['Tablet'],doses:['20mg','25mg','50mg','100mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}.'},
+  {name:'Silver Sulfadiazine Cream',alias:'SSD Cream 1%',cat:'Topical',forms:['Cream'],doses:['1%'],unit:'',instr:'Apply a thin layer to clean wound {freq}{dur}. Cover with non-adherent dressing. Avoid prolonged use on large areas.'},
+  {name:'SMZ-TMP',alias:'Trimethoprim-Sulfa',cat:'Antibiotic',forms:['Tablet'],doses:['480mg','960mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Ensure animal has access to fresh water at all times.'},
+  {name:'Spironolactone',alias:'Aldactone',cat:'Cardiac',forms:['Tablet'],doses:['25mg','50mg','100mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur} with food.'},
+  {name:'Sucralfate',alias:'Carafate',cat:'GI / Antiemetic',forms:['Tablet','Liquid'],doses:['1g','0.5g'],unit:'g',instr:'Give {qty} {form} by mouth {freq}{dur} on an empty stomach. Wait 1-2 hours before giving other medications.'},
+  // T
+  {name:'Temaril-P',alias:'Trimeprazine / Prednisolone',cat:'Respiratory',forms:['Tablet'],doses:['5mg/2mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. Do not use in cats. Taper dose as directed.'},
+  {name:'Terramycin Ophthalmic',alias:'Oxytetracycline / Polymyxin B Eye',cat:'Eye',forms:['Ointment'],doses:['N/A'],unit:'',instr:'Apply a small ribbon of ointment to affected eye(s) {freq}{dur}. Pull lower lid down and apply inside.'},
+  {name:'Tobramycin Ophthalmic',alias:'Tobrex Eye Drops',cat:'Eye',forms:['Eye drops','Ointment'],doses:['0.3%'],unit:'',instr:'Apply 1-2 drops or a small ribbon of ointment to affected eye(s) {freq}{dur}.'},
+  {name:'Tramadol',alias:'Ultram',cat:'Pain',forms:['Tablet'],doses:['50mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq}{dur}. May cause mild sedation. Give with food if stomach upset occurs.'},
+  {name:'Trazodone',alias:'Desyrel',cat:'Behavior',forms:['Tablet'],doses:['50mg','100mg','150mg'],unit:'mg',instr:'Give {qty} tablet by mouth {freq} as needed for anxiety or stress. May cause sedation.'},
+  {name:'Tresaderm',alias:'Thiabendazole / Dexamethasone / Neomycin Ear',cat:'Ear',forms:['Ear drops'],doses:['N/A'],unit:'',instr:'Apply 5-15 drops to affected ear(s) {freq}{dur}. Refrigerate. Do not use with ruptured eardrum.'},
+  {name:'Trilostane',alias:'Vetoryl',cat:'Endocrine',forms:['Capsule'],doses:['5mg','10mg','30mg','60mg','120mg'],unit:'mg',instr:'Give {qty} capsule by mouth {freq}{dur} with food. Do not open capsule. Contact clinic if lethargy or vomiting occurs.'},
+  // V
+  {name:'Vitamin K1',alias:'Phytonadione',cat:'Other',forms:['Tablet','Capsule'],doses:['5mg','25mg','50mg'],unit:'mg',instr:'Give {qty} {form} by mouth {freq}{dur} with a fatty meal. Do not skip doses. Complete the full course.'},
+  // Z
+  {name:'ZN7 Spray',alias:'Zinc Compound Wound Spray',cat:'Topical',forms:['Spray'],doses:['N/A'],unit:'',instr:'Shake well. Apply to clean dry affected area {freq}{dur}. Keep away from eyes. Prevent licking — use e-collar if needed.'},
+].sort((a,b)=>a.name.localeCompare(b.name));
+
+// ── State ──────────────────────────────────────
+let selectedDrug = null;
+let allDrugs = DRUGS;
+let currentSplit = 'whole';
+let currentTabletCount = 1;
+
+// ── Tablet count ───────────────────────────────
+function setTabletCount(n){
+  currentTabletCount = n;
+  document.querySelectorAll('[id^="tc-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tc-'+(n==='custom'?'custom':n)).classList.add('active');
+  document.getElementById('tcCustomWrap').style.display = n==='custom' ? 'block' : 'none';
+  if(n!=='custom') document.getElementById('tcCustom').value='';
+  updateAll();
+}
+
+function getTabletCount(){
+  if(currentTabletCount==='custom'){
+    return parseFloat(document.getElementById('tcCustom').value)||0;
+  }
+  return currentTabletCount;
+}
+
+// ── Form type helpers ──────────────────────────
+function isTabletForm(){
+  const f = document.getElementById('form').value.toLowerCase();
+  return f==='tablet'||f==='capsule'||f==='chewable tablet';
+}
+function isEyeDropForm(){ return document.getElementById('form').value.toLowerCase()==='eye drops'; }
+function isEarDropForm(){ return document.getElementById('form').value.toLowerCase()==='ear drops'; }
+function isDropsForm(){ return isEyeDropForm()||isEarDropForm(); }
+function isMlForm(){
+  const f = document.getElementById('form').value.toLowerCase();
+  return f==='liquid'||f==='suspension';
+}
+function isNoDoseForm(){
+  const f = document.getElementById('form').value.toLowerCase();
+  return ['cream','lotion','powder','topical','spray','transdermal','patch','ointment'].includes(f);
+}
+function isContainerForm(){
+  const f = document.getElementById('form').value.toLowerCase();
+  // Eye drops, eye ointments, ear ointments/creams → container
+  // Ear drops with ml doses → auto-fill from dose, not container picker
+  if(f==='eye drops') return true;
+  if(f==='ointment'||f==='cream') return true;
+  if(f==='lotion') return true;
+  if(f==='ear drops'){
+    // If dose is a plain ml bottle size, auto-fill qty instead
+    const doseVal = document.getElementById('doseSelect').value;
+    if(doseVal && /^\d+ml$/i.test(doseVal)) return false;
+    return true;
+  }
+  return false;
+}
+
+const CONTAINER_OPTIONS = {
+  'eye drops': ['1 bottle','2 bottles','3 bottles','Other (type below)'],
+  'ear drops': ['1 bottle','2 bottles','3 bottles','Other (type below)'],
+  'ointment':  ['1 tube','2 tubes','3 tubes','Other (type below)'],
+  'cream':     ['1 tube','2 tubes','3 tubes','1 jar','Other (type below)'],
+  'lotion':    ['1 bottle','2 bottles','3 bottles','Other (type below)'],
+};
+
+function updateContainerOptions(){
+  const f = document.getElementById('form').value.toLowerCase();
+  const opts = CONTAINER_OPTIONS[f] || ['1 tube','Other (type below)'];
+  const sel = document.getElementById('containerSelect');
+  sel.innerHTML = '<option value="">— select container —</option>' +
+    opts.map(o=>`<option value="${o==='Other (type below)'?'other':o}">${o}</option>`).join('');
+  document.getElementById('containerCustomWrap').style.display='none';
+  document.getElementById('containerCustom').value='';
+  document.getElementById('qty').value='';
+}
+
+function onContainerSelect(){
+  const val = document.getElementById('containerSelect').value;
+  document.getElementById('containerCustomWrap').style.display = val==='other' ? 'block' : 'none';
+  if(val && val!=='other') document.getElementById('qty').value = val;
+  else if(val!=='other') document.getElementById('qty').value='';
+  updatePreview();
+}
+
+function onContainerCustom(){
+  document.getElementById('qty').value = document.getElementById('containerCustom').value;
+  updatePreview();
+}
+
+function changeDrops(delta){
+  const el = document.getElementById('dropsCount');
+  let n = parseInt(el.value)||4;
+  n = Math.max(1, n+delta);
+  el.value = n;
+  document.getElementById('dropsDisplay').textContent = n;
+  updateAll();
+}
+
+function setEye(side){
+  document.getElementById('eyeSide').value = side;
+  ['right','left','both'].forEach(s=>{const el=document.getElementById('eye-'+s);if(el)el.classList.remove('active');});
+  const map={'Right eye':'right','Left eye':'left','Both eyes':'both'};
+  const btn=document.getElementById('eye-'+map[side]);if(btn)btn.classList.add('active');
+  updateAll();
+}
+function setEar(side){
+  document.getElementById('earSide').value = side;
+  ['right','left','both'].forEach(s=>{const el=document.getElementById('ear-'+s);if(el)el.classList.remove('active');});
+  const map={'Right ear':'right','Left ear':'left','Both ears':'both'};
+  const btn=document.getElementById('ear-'+map[side]);if(btn)btn.classList.add('active');
+  updateAll();
+}
+function setOintEye(side){
+  const eyeEl=document.getElementById('eyeSide');if(eyeEl)eyeEl.value=side;
+  ['right','left','both'].forEach(s=>{const b=document.getElementById('eye-'+s);if(b)b.classList.remove('active');});
+  const map={'Right eye':'right','Left eye':'left','Both eyes':'both'};
+  const btn=document.getElementById('eye-'+map[side]);if(btn)btn.classList.add('active');
+  updateAll();
+}
+
+function updateFormDoseUI(){
+  const f = document.getElementById('form').value.toLowerCase();
+  const tablet = isTabletForm();
+  const eyeDrop = isEyeDropForm();
+  const earDrop = isEarDropForm();
+  const ml = isMlForm();
+
+  // Hide all dose sub-UIs
+  ['tabletDoseWrap','eyeDropsWrap','earDropsWrap','mlFieldWrap','noDoseWrap','ointmentEyeWrap','eyeSideWrap','earSideWrap']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  document.getElementById('splitWrap').style.display='none';
+
+  // Determine drug category for eye/ear side selectors
+  const drugCat = selectedDrug ? selectedDrug.cat.toLowerCase() : '';
+  const isEyeDrug = drugCat.includes('eye') || f==='eye drops' ||
+    (selectedDrug && (selectedDrug.name.toLowerCase().includes('ophthalmic') ||
+     selectedDrug.name.toLowerCase().includes('eye') ||
+     selectedDrug.forms.some(fm=>fm.toLowerCase().includes('eye'))));
+  const isEarDrug = drugCat.includes('ear') || f==='ear drops' ||
+    (selectedDrug && selectedDrug.forms.some(fm=>fm.toLowerCase().includes('ear')));
+
+  // Show correct dose UI
+  if(tablet){
+    document.getElementById('tabletDoseWrap').style.display='block';
+    document.getElementById('splitWrap').style.display='block';
+  } else if(eyeDrop){
+    document.getElementById('eyeDropsWrap').style.display='block';
+  } else if(earDrop){
+    document.getElementById('earDropsWrap').style.display='block';
+  } else if(ml){
+    document.getElementById('mlFieldWrap').style.display='block';
+  } else if(f==='ointment'){
+    document.getElementById('ointmentEyeWrap').style.display='block';
+  } else {
+    document.getElementById('noDoseWrap').style.display='block';
+  }
+
+  // Show side selector based on drug/form
+  if(isEyeDrug) document.getElementById('eyeSideWrap').style.display='block';
+  else if(isEarDrug) document.getElementById('earSideWrap').style.display='block';
+
+  // Dose label
+  const labelMap = {
+    'liquid':'Amount per dose (ml)','suspension':'Amount per dose (ml)',
+    'eye drops':'Eye side','ear drops':'Drops & ear side',
+    'ointment':'Apply a small amount','cream':'Apply as directed',
+    'lotion':'Apply as directed','spray':'Apply as directed',
+    'powder':'Apply as directed','transdermal':'Apply as directed',
+    'topical':'Apply as directed','patch':'Apply as directed'
+  };
+  const doseLabel = document.getElementById('doseQtyLabel');
+  if(doseLabel) doseLabel.textContent =
+    tablet ? '# of tablets + split per dose' : (labelMap[f]||'Amount per dose');
+
+  // Qty field
+  const qtyLabel = document.getElementById('qtyLabel');
+  const qtyInput = document.getElementById('qty');
+  const containerWrap = document.getElementById('containerWrap');
+  const container = isContainerForm();
+  if(container){
+    qtyInput.style.display='none';
+    containerWrap.style.display='block';
+    updateContainerOptions();
+    if(qtyLabel) qtyLabel.textContent = 'Quantity dispensed';
+  } else {
+    qtyInput.style.display='block';
+    containerWrap.style.display='none';
+    if(qtyLabel) qtyLabel.textContent = ml ? 'Total mls to dispense' : 'Total quantity dispensed';
+  }
+
+  updateAll();
+}
+
+// Build the dose quantity string for instructions
+function getDoseQtyText(){
+  if(isTabletForm()){
+    const whole = getTabletCount();
+    const splitFracMap = {whole:'',half:'1/2',quarter:'1/4',threequarter:'3/4'};
+    const frac = splitFracMap[currentSplit]||'';
+    if(whole===0 && frac) return frac;
+    if(whole>0 && frac) return whole+'-'+frac;
+    if(whole>0) return String(whole);
+    return '1';
+  }
+  if(isEyeDropForm()) return '1-2';
+  if(isEarDropForm()) return document.getElementById('dropsCount').value || '4';
+  if(isMlForm()) return document.getElementById('fluidAmt').value.trim() || '';
+  return '';
+}
+
+// Unit word for label
+function getUnitWord(form, count){
+  const f = form.toLowerCase();
+  const plural = count!==1;
+  if(f==='tablet'||f==='chewable tablet') return plural ? 'tablets':'tablet';
+  if(f==='capsule') return plural ? 'capsules':'capsule';
+  if(f==='liquid'||f==='suspension') return 'ml';
+  if(f==='eye drops'||f==='ear drops') return plural ? 'drops':'drop';
+}
+
+// ── Dose dropdown helpers ──────────────────────
+function populateDoseDropdown(drug){
+  const sel = document.getElementById('doseSelect');
+  sel.innerHTML = '';
+  if(!drug || !drug.doses || !drug.doses.length){
+    sel.innerHTML = '<option value="">—</option><option value="other">Enter manually below</option>';
+    document.getElementById('doseManualWrap').style.display='block';
+    return;
+  }
+  sel.innerHTML = drug.doses.map(d=>`<option value="${d}">${d}</option>`).join('');
+  sel.innerHTML += '<option value="other">Other (type below)</option>';
+  document.getElementById('doseManualWrap').style.display='none';
+
+  const firstDose = drug.doses[0]||'';
+  // Auto-switch to Suspension for concentration doses
+  if(/\d+\s*mg\/ml/i.test(firstDose)){
+    document.getElementById('form').value='Suspension';
+    updateFormDoseUI();
+    return;
+  }
+  // Auto-fill qty for ear drop ml bottle sizes
+  if(/^\d+ml$/i.test(firstDose) && isEarDropForm()){
+    document.getElementById('qty').value = firstDose + ' bottle';
+    document.getElementById('qty').style.display='block';
+    document.getElementById('containerWrap').style.display='none';
+    qtyManualOverride = true;
+  }
+  updateFormDoseUI();
+}
+
+function handleDoseSelect(){
+  const val = document.getElementById('doseSelect').value;
+  document.getElementById('doseManualWrap').style.display = val==='other' ? 'block' : 'none';
+  if(val!=='other') document.getElementById('doseManual').value='';
+
+  // Auto-switch to Suspension for concentration doses (mg/ml)
+  const isConc = val && val!=='other' && /\d+\s*mg\/ml/i.test(val);
+  if(isConc){
+    document.getElementById('form').value='Suspension';
+    updateFormDoseUI();
+    return;
+  }
+
+  // Auto-fill qty for ear drop ml bottle sizes (e.g. "10ml", "30ml")
+  const isMlBottle = val && val!=='other' && /^\d+ml$/i.test(val);
+  if(isMlBottle && isEarDropForm()){
+    document.getElementById('qty').value = val + ' bottle';
+    document.getElementById('qty').style.display='block';
+    document.getElementById('containerWrap').style.display='none';
+    qtyManualOverride = true;
+  }
+
+  updateFormDoseUI();
+}
+
+function getDoseDisplay(){
+  const sel = document.getElementById('doseSelect');
+  // If dose select is hidden (custom med mode), use manual field
+  if(sel && sel.style.display === 'none'){
+    return document.getElementById('doseManual').value.trim();
+  }
+  const val = sel ? sel.value : '';
+  const manual = document.getElementById('doseManual').value.trim();
+  return (val==='other'||val==='') ? manual : val;
+}
+
+function setSplit(mode){
+  currentSplit = mode;
+  document.querySelectorAll('.split-btn[id^="split-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('split-'+mode).classList.add('active');
+  const precutWrap = document.getElementById('precutWrap');
+  precutWrap.style.display = (mode!=='whole') ? 'block' : 'none';
+  if(mode==='whole') document.getElementById('precut-no').checked=true;
+  updateAll();
+}
+
+// ── Dropdown ──────────────────────────────────
+function filterDrugs(){
+  const q = document.getElementById('drugSearch').value.toLowerCase().trim();
+  const dd = document.getElementById('drugDropdown');
+  if(!q){dd.innerHTML='';showDropdown();return;}
+  const matches = allDrugs.filter(d=>
+    d.name.toLowerCase().includes(q) || d.alias.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q)
+  ).slice(0,12);
+  if(!matches.length){dd.innerHTML='<div class="drug-opt" style="color:var(--text3)">No matches — type to search</div>'; dd.classList.add('show'); return;}
+  dd.innerHTML = matches.map((d,i)=>`
+    <div class="drug-opt" onclick="selectDrug(${DRUGS.indexOf(d)})">
+      <span class="drug-opt-cat">${d.cat}</span>
+      <div class="drug-opt-name">${d.name}</div>
+      <div class="drug-opt-alias">${d.alias}</div>
+    </div>`).join('') +
+    `<div class="drug-opt" onclick="selectCustomMed()" style="border-top:1px solid var(--border2);color:var(--amber)">
+      <div class="drug-opt-name">✏ Not in list — enter manually</div>
+    </div>`;
+  dd.classList.add('show');
+}
+
+function showDropdown(){
+  const q = document.getElementById('drugSearch').value.toLowerCase().trim();
+  if(!q){
+    const dd = document.getElementById('drugDropdown');
+    const grouped = {};
+    allDrugs.forEach(d=>{if(!grouped[d.cat])grouped[d.cat]=[];grouped[d.cat].push(d);});
+    // ADD MEDICATION at very top
+    dd.innerHTML =
+      `<div class="drug-opt" onclick="selectCustomMed()" style="background:#1a2744;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;border-bottom:2px solid var(--teal)">
+        <div style="display:flex;align-items:center;gap:6px">➕ ADD MEDICATION — type your own</div>
+      </div>` +
+      Object.entries(grouped).map(([cat,drugs])=>
+        `<div style="padding:4px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);background:var(--surface2)">${cat}</div>`+
+        drugs.map(d=>`<div class="drug-opt" onclick="selectDrug(${DRUGS.indexOf(d)})">
+          <div class="drug-opt-name">${d.name}</div>
+          <div class="drug-opt-alias">${d.alias}</div>
+        </div>`).join('')
+      ).join('');
+    dd.classList.add('show');
+  }
+}
+
+function hideDropdown(){
+  document.getElementById('drugDropdown').classList.remove('show');
+}
+
+function selectDrug(idx){
+  selectedDrug = DRUGS[idx];
+  document.getElementById('drugSearch').value = selectedDrug.name;
+  showCustomMed(false);
+
+  // Set form to first available form for this drug
+  if(selectedDrug.forms && selectedDrug.forms.length){
+    const formSel = document.getElementById('form');
+    const match = selectedDrug.forms.find(f=>f===formSel.value) || selectedDrug.forms[0];
+    formSel.value = match;
+  }
+
+  // Show packet qty for Fenbendazole Granules
+  const isGranules = selectedDrug.name.toLowerCase().includes('granule');
+  showPacketQty(isGranules);
+  if(isGranules){
+    document.getElementById('qty').style.display='none';
+    document.getElementById('qtyLabel').textContent='Number of packets';
+  } else {
+    document.getElementById('qty').style.display='block';
+  }
+
+  populateDoseDropdown(selectedDrug);
+  hideDropdown();
+  updateFormDoseUI();
+}
+
+function clearDrug(){
+  selectedDrug=null;
+  document.getElementById('drugSearch').value='';
+  document.getElementById('doseSelect').innerHTML='<option value="">— select drug first —</option>';
+  document.getElementById('doseManualWrap').style.display='none';
+  document.getElementById('doseManual').value='';
+  document.getElementById('autoInstrBox').style.display='none';
+  updatePreview();
+}
+
+// ── Auto-instruction generator ─────────────────
+function buildAutoInstr(){
+  const drug = selectedDrug;
+  if(!drug) return null;
+  const form = document.getElementById('form').value.toLowerCase();
+  const freq = getFreq();
+  const dur = getDuration();
+  if(!freq) return null;
+
+  const freqMap = {
+    'Once daily (q24h)':'once daily',
+    'Twice daily (q12h)':'twice daily',
+    'Three times daily (q8h)':'three times daily',
+    'Four times daily (q6h)':'four times daily',
+    'Every 48 hours (q48h)':'every 48 hours',
+    'Every 72 hours (q72h)':'every 72 hours',
+    'Once weekly':'once weekly',
+    'Once monthly':'once monthly',
+    'Monthly':'once monthly',
+    'As needed (PRN)':'as needed',
+    'Once':'as a single dose'
+  };
+  const freqStr = freqMap[freq] || freq;
+  const durStr = dur && dur!=='' ? ` for ${dur}` : '';
+
+  // Qty string and unit word
+  const qtyStr = getDoseQtyText() || '1';
+  let unitWord;
+  let sideNote = '';
+
+  if(isTabletForm()){
+    const totalCount = getTabletCount() + (currentSplit!=='whole' ? 0.5 : 0);
+    unitWord = getUnitWord(document.getElementById('form').value, totalCount);
+  } else if(isEyeDropForm()){
+    unitWord = 'drops';
+    const side = document.getElementById('eyeSide').value || 'Both eyes';
+    sideNote = ' to ' + side.toLowerCase();
+  } else if(isEarDropForm()){
+    const n = parseInt(document.getElementById('dropsCount').value)||4;
+    unitWord = n===1 ? 'drop' : 'drops';
+    const side = document.getElementById('earSide').value || 'Both ears';
+    sideNote = ' to ' + side.toLowerCase();
+  } else if(isMlForm()){
+    unitWord = 'ml';
+  } else {
+    unitWord = '';
+  }
+
+  // For suspension/liquid use ml amount from fluidAmt field, not dose select
+  const mlQty = isMlForm() ? (document.getElementById('fluidAmt').value.trim() || qtyStr) : qtyStr;
+
+  let tmpl = drug.instr || 'Give {qty} {form} by mouth {freq}{dur}.';
+
+  // Override templates for specific forms
+  if(isEyeDropForm()){
+    tmpl = 'Apply {qty} {form}{side} {freq}{dur}.';
+  } else if(isEarDropForm()){
+    tmpl = 'Apply {qty} {form}{side} {freq}{dur}. Gently massage ear base after application.';
+  } else if(form==='ointment'){
+    const sideEl = document.getElementById('eyeSide');
+    const side = sideEl ? sideEl.value : '';
+    const sideStr = side ? ' to ' + side.toLowerCase() : '';
+    tmpl = `Apply a small amount${sideStr} {freq}{dur}.`;
+  } else if(form==='patch'||form==='transdermal'){
+    tmpl = 'Apply as directed {freq}{dur}.';
+  } else if(isMlForm()){
+    // Use ml amount for suspension/liquid
+    tmpl = drug.instr ? drug.instr.replace('{qty}', mlQty) : `Give ${mlQty} ml by mouth {freq}{dur}.`;
+  }
+
+  let instr = tmpl
+    .replace('{qty}', isMlForm() ? mlQty : qtyStr)
+    .replace('{form}', unitWord)
+    .replace('{side}', sideNote)
+    .replace('{freq}', freqStr)
+    .replace('{dur}', durStr);
+
+  // Pre-cut note for split tablets
+  if(isTabletForm() && currentSplit !== 'whole'){
+    const precutEl = document.querySelector('input[name="precut"]:checked');
+    const precut = precutEl ? precutEl.value : 'no';
+    instr += precut==='yes' ? ' Tablets have been pre-cut.' : ' Cut tablet before giving.';
+  }
+
+  return instr;
+}
+
+// ── Total qty auto-calculator ──────────────────
+let qtyManualOverride = false;
+
+function onQtyManualEdit(){
+  qtyManualOverride = true;
+  document.getElementById('qtyCalcBadge').style.display='none';
+  document.getElementById('qtyCalcNote').style.display='none';
+  updatePreview();
+}
+
+function calcTotalQty(){
+  const freq = getFreq();
+  const dur = getDuration();
+  const form = document.getElementById('form').value.toLowerCase();
+
+  // doses per day
+  const freqPerDay = {
+    'Once daily (q24h)':1,
+    'Twice daily (q12h)':2,
+    'Three times daily (q8h)':3,
+    'Four times daily (q6h)':4,
+    'Every 48 hours (q48h)':0.5,
+    'Every 72 hours (q72h)':0.333,
+    'Once weekly':1/7,
+    'Once monthly':1/30,
+    'Monthly':1/30,
+    'Once':null,
+    'As needed (PRN)':null
+  };
+
+  // days from duration
+  const durDays = {
+    '1 day':1,'3 days':3,'5 days':5,'7 days':7,'10 days':10,
+    '14 days':14,'21 days':21,'30 days':30,'60 days':60,
+    '90 days':90,'Monthly':30,'Ongoing':null
+  };
+
+  if(!freq || !dur) return null;
+  const perDay = freqPerDay[freq];
+  const days = durDays[dur];
+  if(perDay===null||days===null||perDay===undefined||days===undefined) return null;
+
+  // per-dose amount
+  let perDose;
+  const isCustomMode = document.getElementById('doseSelect').style.display === 'none';
+
+  if(isTabletForm()){
+    const whole = getTabletCount()==='custom'
+      ? (parseFloat(document.getElementById('tcCustom').value)||0)
+      : getTabletCount();
+    const fracMap = {whole:0,half:0.5,quarter:0.25,threequarter:0.75};
+    perDose = whole + (fracMap[currentSplit]||0);
+    // Custom med with manual dose — try to parse a number from dose field
+    if(isCustomMode && perDose===0){
+      const manualDose = document.getElementById('doseManual').value.trim();
+      perDose = parseFloat(manualDose)||0;
+    }
+  } else if(isDropsForm()){
+    return null; // bottle ml dispensed manually
+  } else if(isMlForm()){
+    const mlVal = document.getElementById('fluidAmt').value.trim();
+    perDose = parseFloat(mlVal)||0;
+    // Custom med — try manual dose field if fluidAmt empty
+    if(isCustomMode && perDose===0){
+      const manualDose = document.getElementById('doseManual').value.trim();
+      perDose = parseFloat(manualDose)||0;
+    }
+  } else {
+    return null;
+  }
+  if(perDose===0) return null;
+
+  const total = perDose * perDay * days;
+  const rounded = Math.round(total * 2) / 2;
+  const display = rounded % 1 === 0 ? rounded : rounded.toFixed(1);
+
+  let unitLabel;
+  if(form==='tablet'||form==='chewable tablet') unitLabel = rounded===1 ? 'tablet' : 'tablets';
+  else if(form==='capsule') unitLabel = rounded===1 ? 'capsule' : 'capsules';
+  else if(form==='liquid'||form==='suspension') unitLabel = 'ml';
+  else unitLabel = form;
+
+  return {total: rounded, text: display + ' ' + unitLabel,
+    formula: `${perDose} × ${perDay}/day × ${days} days`};
+}
+
+function updateAll(){
+  // Refresh eye/ear side selector visibility based on current drug/form
+  const f = document.getElementById('form').value.toLowerCase();
+  const drugCat = selectedDrug ? selectedDrug.cat.toLowerCase() : '';
+  const isEyeDrug = drugCat.includes('eye') || f==='eye drops' ||
+    (selectedDrug && (selectedDrug.name.toLowerCase().includes('ophthalmic') ||
+     selectedDrug.name.toLowerCase().includes('eye') ||
+     selectedDrug.forms.some(fm=>fm.toLowerCase().includes('eye'))));
+  const isEarDrug = drugCat.includes('ear') || f==='ear drops' ||
+    (selectedDrug && selectedDrug.forms.some(fm=>fm.toLowerCase().includes('ear')));
+  const esw = document.getElementById('eyeSideWrap');
+  const asw = document.getElementById('earSideWrap');
+  if(esw) esw.style.display = isEyeDrug ? 'block' : 'none';
+  if(asw) asw.style.display = isEarDrug && !isEyeDrug ? 'block' : 'none';
+
+  // Auto-instruction — from drug template OR custom med basic template
+  const isCustomMode = document.getElementById('doseSelect').style.display === 'none';
+  let auto = null;
+  if(isCustomMode){
+    // Build basic instruction for custom med
+    const dose    = document.getElementById('doseManual').value.trim();
+    const form    = document.getElementById('form').value.toLowerCase();
+    const freq    = getFreq();
+    const dur     = getDuration();
+    if(freq){
+      const freqMap = {
+        'Once daily (q24h)':'once daily','Twice daily (q12h)':'twice daily',
+        'Three times daily (q8h)':'three times daily','Four times daily (q6h)':'four times daily',
+        'Every 48 hours (q48h)':'every 48 hours','Every 72 hours (q72h)':'every 72 hours',
+        'Once weekly':'once weekly','Once monthly':'once monthly',
+        'As needed (PRN)':'as needed','Once':'as a single dose'
+      };
+      const freqStr = freqMap[freq] || freq;
+      const durStr  = dur ? ' for '+dur : '';
+      const qtyStr  = getDoseQtyText() || '1';
+      const isTopical = ['ointment','cream','lotion','spray','topical'].includes(form);
+      const isPatch   = form==='patch'||form==='transdermal';
+      const isDrops   = form.includes('drop');
+      const isMl      = form==='liquid'||form==='suspension';
+      const mlAmt     = document.getElementById('fluidAmt').value.trim();
+      let instr;
+      if(isPatch){
+        instr = `Apply as directed ${freqStr}${durStr}.`;
+      } else if(isTopical){
+        instr = `Apply to affected area ${freqStr}${durStr}.`;
+      } else if(isDrops){
+        const isEye = form==='eye drops';
+        const isEar = form==='ear drops';
+        const eyeSide = document.getElementById('eyeSide') ? document.getElementById('eyeSide').value : 'both eyes';
+        const earSide = document.getElementById('earSide') ? document.getElementById('earSide').value : 'both ears';
+        const side = isEye ? eyeSide.toLowerCase() : isEar ? earSide.toLowerCase() : '';
+        instr = `Apply ${qtyStr} drop(s) to ${side} ${freqStr}${durStr}.`;
+      } else if(isMl){
+        instr = `Give ${mlAmt||dose||qtyStr} ml by mouth ${freqStr}${durStr}.`;
+      } else {
+        const unit = form.includes('capsule') ? 'capsule' : 'tablet';
+        instr = `Give ${qtyStr} ${unit} by mouth ${freqStr}${durStr}.`;
+      }
+      auto = instr;
+    }
+  } else {
+    auto = buildAutoInstr();
+  }
+
+  const box = document.getElementById('autoInstrBox');
+  if(auto){
+    document.getElementById('autoInstrText').textContent = auto;
+    box.style.display='block';
+  } else {
+    box.style.display='none';
+  }
+
+  // Auto qty — only if user hasn't manually overridden
+  if(!qtyManualOverride){
+    const calc = calcTotalQty();
+    const qtyEl = document.getElementById('qty');
+    const badge = document.getElementById('qtyCalcBadge');
+    const note = document.getElementById('qtyCalcNote');
+    if(calc){
+      qtyEl.value = calc.text;
+      badge.style.display='inline-block';
+      note.textContent = calc.formula;
+      note.style.display='block';
+    } else {
+      qtyEl.value='';
+      badge.style.display='none';
+      note.style.display='none';
+    }
+  }
+
+  updatePreview();
+}
+
+function useAutoInstr(){
+  // Read the currently displayed auto-instruction (works for both normal and custom med)
+  const autoText = document.getElementById('autoInstrText').textContent;
+  if(autoText){
+    document.getElementById('instructions').value = autoText;
+  } else {
+    const auto = buildAutoInstr();
+    if(auto) document.getElementById('instructions').value = auto;
+  }
+  updatePreview();
+}
+
+// ── Vet dropdown ───────────────────────────────
+function handleVetSelect(){
+  const sel = document.getElementById('vetSelect').value;
+  const wrap = document.getElementById('vetOtherWrap');
+  wrap.style.display = sel === 'other' ? 'block' : 'none';
+  if(sel !== 'other') document.getElementById('vetOther').value='';
+  updatePreview();
+}
+
+function getVetName(){
+  const sel = document.getElementById('vetSelect').value;
+  if(sel === 'other') return document.getElementById('vetOther').value.trim();
+  return sel;
+}
+
+function selectCustomMed(){
+  selectedDrug = null;
+  // Let user type med name directly in the search bar
+  const searchEl = document.getElementById('drugSearch');
+  searchEl.value = '';
+  searchEl.placeholder = '✏ Type your medication name...';
+  searchEl.style.borderColor = 'var(--teal)';
+  // Show manual dose entry, hide dose select
+  document.getElementById('doseSelect').style.display='none';
+  document.getElementById('doseSelect').innerHTML='<option value="">—</option>';
+  document.getElementById('doseManualWrap').style.display='block';
+  document.getElementById('doseManual').value='';
+  document.getElementById('doseManual').placeholder='e.g. 100mg, 5mg/ml';
+  // Reset auto-instruction since no drug template
+  document.getElementById('autoInstrBox').style.display='none';
+  hideDropdown();
+  setTimeout(()=>searchEl.focus(), 100);
+  // Run normal form UI so form/freq/qty/instructions all work
+  updateFormDoseUI();
+}
+
+// ── Frequency with Other option ────────────────
+function handleFreqSelect(){
+  const val = document.getElementById('freq').value;
+  const wrap = document.getElementById('freqOtherWrap');
+  if(wrap) wrap.style.display = val==='other' ? 'block' : 'none';
+  if(val!=='other'){ const el=document.getElementById('freqOther'); if(el) el.value=''; }
+  updateAll();
+}
+
+function getFreq(){
+  const val = document.getElementById('freq').value;
+  if(val==='other') return document.getElementById('freqOther').value.trim();
+  return val;
+}
+
+// ── Packet qty for Fenbendazole Granules ───────
+function onPacketQtySelect(){
+  const val = document.getElementById('packetQty').value;
+  if(val) document.getElementById('qty').value = val;
+  updatePreview();
+}
+
+function showPacketQty(show){
+  const wrap = document.getElementById('packetQtyWrap');
+  if(wrap) wrap.style.display = show ? 'block' : 'none';
+}
+
+// ── Custom medication ──────────────────────────
+function showCustomMed(show){ /* custom med section removed - no-op */ }
+
+// ── Duration select with manual entry ──────────
+function handleDurationSelect(){
+  const val = document.getElementById('duration').value;
+  document.getElementById('durationOtherWrap').style.display = val==='other' ? 'block' : 'none';
+  if(val!=='other') document.getElementById('durationOther').value='';
+  updateAll();
+}
+
+function getDuration(){
+  const val = document.getElementById('duration').value;
+  if(val==='other') return document.getElementById('durationOther').value.trim();
+  return val;
+}
+
+// ── Start time ─────────────────────────────────
+function setStart(mode){
+  document.getElementById('startMode').value = mode;
+  document.querySelectorAll('.start-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('stn-'+mode).classList.add('active');
+  document.getElementById('startDateWrap').style.display = mode==='date' ? 'block' : 'none';
+  updatePreview();
+}
+
+function getStartText(){
+  const mode = document.getElementById('startMode').value;
+  if(!mode) return '';
+  if(mode==='tonight') return 'Start tonight.';
+  if(mode==='tomorrow-am') return 'Start tomorrow morning.';
+  if(mode==='tomorrow-pm') return 'Start tomorrow evening.';
+  if(mode==='date'){
+    const d = document.getElementById('startDate').value;
+    if(!d) return 'Start: (pick date)';
+    const dt = new Date(d+'T00:00:00');
+    return 'Start: '+dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'.';
+  }
+  return '';
+}
+
+// ── Auto-set expiration 1 year from dispensed date ─
+function onDispensedChange(){
+  const rxVal = document.getElementById('rxDate').value;
+  if(rxVal){
+    const d = new Date(rxVal+'T00:00:00');
+    d.setFullYear(d.getFullYear()+1);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    document.getElementById('expDate').value = `${yyyy}-${mm}-${dd}`;
+  }
+  updatePreview();
+}
+
+// ── Preview ────────────────────────────────────
+function updatePreview(){
+  const drug = selectedDrug ? selectedDrug.name : document.getElementById('drugSearch').value.trim();
+  const form = document.getElementById('form').value;
+  const instr = document.getElementById('instructions').value;
+  const qty = document.getElementById('qty').value;
+  const patient = document.getElementById('patientName').value;
+  const species = document.getElementById('species').value;
+  const owner = document.getElementById('ownerName').value;
+  const vet = getVetName();
+  const clinic = document.getElementById('clinicName').value;
+  const addr = document.getElementById('clinicAddr').value;
+  const phone = document.getElementById('clinicPhone').value;
+  const dateVal = document.getElementById('rxDate').value;
+  const keepAway = document.getElementById('keepAway').checked;
+
+  // ── TOP: Clinic section ──
+  document.getElementById('prev-clinic-name').textContent = clinic || 'YOUR CLINIC NAME';
+  document.getElementById('prev-clinic-addr').textContent = addr || '';
+  // Phone + vet on same line
+  let phoneVet = '';
+  if(phone) phoneVet += phone;
+  if(vet) phoneVet += (phoneVet ? '  |  ' : '') + vet;
+  document.getElementById('prev-clinic-phone-vet').textContent = phoneVet;
+
+  // ── MIDDLE: Patient section ──
+  let patLine = '';
+  if(patient) patLine += 'Patient: ' + patient;
+  if(species) patLine += (patLine ? ' ('+species+')' : species);
+  document.getElementById('prev-patient').textContent = patLine || '';
+  document.getElementById('prev-owner').textContent = owner ? 'Owner: '+owner : '';
+
+  // ── MEDICATION section ──
+  const drugName = selectedDrug ? selectedDrug.name : (document.getElementById('drugSearch').value.trim() || 'Drug Name');
+  const doseDisplay = getDoseDisplay();
+  let drugLine = drugName;
+  if(doseDisplay) drugLine += ' ' + doseDisplay;
+  if(form) drugLine += ' ' + form;
+  document.getElementById('prev-drug').textContent = drugLine;
+
+  let sub = qty ? 'Total Qty: ' + qty : '';
+  document.getElementById('prev-sub').textContent = sub;
+
+  const startText = getStartText();
+  const fullInstr = [instr || '(Instructions)', startText].filter(Boolean).join(' ');
+  const instrEl = document.getElementById('prev-instr');
+  instrEl.textContent = fullInstr;
+
+  // ── BOTTOM: Dates row ──
+  const expVal = document.getElementById('expDate').value;
+  if(dateVal){
+    const d = new Date(dateVal+'T00:00:00');
+    document.getElementById('prev-date').textContent = 'Disp: '+d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  } else {
+    document.getElementById('prev-date').textContent='';
+  }
+  if(expVal){
+    const e = new Date(expVal+'T00:00:00');
+    document.getElementById('prev-expdate').textContent = 'Exp: '+e.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  } else {
+    document.getElementById('prev-expdate').textContent='';
+  }
+
+  // ── BOTTOM: Warning ──
+  document.getElementById('prev-warn').style.display = keepAway ? 'block' : 'none';
+  checkFields();
+}
+
+// ── Clinic defaults ────────────────────────────
+const CLINIC_DEFAULTS = {
+  clinicName: 'Pinellas County Animal Services',
+  clinicAddr: '12450 Ulmerton Rd. Largo, FL 33774',
+  clinicPhone: '727-582-2600'
+};
+
+// ── Clear ──────────────────────────────────────
+function clearAll(){
+  // Clear text fields
+  ['doseManual','qty','fluidAmt','patientName','vetOther','instructions',
+   'tcCustom','containerCustom','freqOther'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+
+  // Custom med + packet qty
+  showCustomMed(false);
+  showPacketQty(false);
+  const freqOtherWrap = document.getElementById('freqOtherWrap');
+  if(freqOtherWrap) freqOtherWrap.style.display='none';
+  const packetQtyEl = document.getElementById('packetQty');
+  if(packetQtyEl) packetQtyEl.value='';
+
+  const searchEl = document.getElementById('drugSearch');
+  if(searchEl){ searchEl.value=''; searchEl.placeholder='Type drug name...'; searchEl.style.borderColor=''; }
+  // Show dose select again
+  const doseSelEl = document.getElementById('doseSelect');
+  if(doseSelEl){ doseSelEl.style.display='block'; doseSelEl.innerHTML='<option value="">— select drug first —</option>'; }
+  const doseQtyLbl = document.getElementById('doseQtyLabel');
+  if(doseQtyLbl) doseQtyLbl.style.display='block';
+  document.getElementById('doseManualWrap').style.display='none';
+  selectedDrug=null;
+  document.getElementById('autoInstrBox').style.display='none';
+
+  // Tablet count reset
+  currentSplit='whole';
+  currentTabletCount=1;
+  document.querySelectorAll('[id^="tc-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tc-1').classList.add('active');
+  document.getElementById('tcCustomWrap').style.display='none';
+
+  // Split reset
+  document.querySelectorAll('.split-btn[id^="split-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('split-whole').classList.add('active');
+  document.getElementById('precutWrap').style.display='none';
+  document.getElementById('precut-no').checked=true;
+
+  // Drops reset
+  document.getElementById('dropsCount').value='4';
+  document.getElementById('dropsDisplay').textContent='4';
+
+  // Eye/ear side reset
+  ['eye-right','eye-left','eye-both'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const eyeBoth=document.getElementById('eye-both');if(eyeBoth)eyeBoth.classList.add('active');
+  const eyeSideEl=document.getElementById('eyeSide');if(eyeSideEl)eyeSideEl.value='Both eyes';
+  ['ear-right','ear-left','ear-both'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  const earBoth=document.getElementById('ear-both');if(earBoth)earBoth.classList.add('active');
+  const earSideEl=document.getElementById('earSide');if(earSideEl)earSideEl.value='Both ears';
+  const eyeSideWrap=document.getElementById('eyeSideWrap');if(eyeSideWrap)eyeSideWrap.style.display='none';
+  const earSideWrap=document.getElementById('earSideWrap');if(earSideWrap)earSideWrap.style.display='none';
+
+  // Form reset — triggers updateFormDoseUI which fixes all dose wrappers
+  document.getElementById('form').value='Tablet';
+
+  // Qty / container reset
+  qtyManualOverride=false;
+  document.getElementById('qty').style.display='block';
+  document.getElementById('qty').value='';
+  document.getElementById('qtyCalcBadge').style.display='none';
+  document.getElementById('qtyCalcNote').style.display='none';
+  document.getElementById('containerWrap').style.display='none';
+  document.getElementById('containerCustomWrap').style.display='none';
+
+  // Patient / owner
+  document.getElementById('ownerName').value='PCAS';
+  document.getElementById('species').value='';
+
+  // Vet
+  document.getElementById('vetSelect').value='';
+  document.getElementById('vetOtherWrap').style.display='none';
+
+  // Start time
+  document.getElementById('startMode').value='';
+  document.getElementById('startDate').value='';
+  document.getElementById('startDateWrap').style.display='none';
+  document.querySelectorAll('.start-btn').forEach(b=>b.classList.remove('active'));
+
+  // Freq / duration
+  document.getElementById('freq').value='';
+  document.getElementById('duration').value='';
+  document.getElementById('durationOther').value='';
+  document.getElementById('durationOtherWrap').style.display='none';
+
+  // Dates
+  document.getElementById('rxDate').valueAsDate = new Date();
+  document.getElementById('expDate').value='';
+  document.getElementById('keepAway').checked=true;
+
+  // Clinic defaults
+  document.getElementById('clinicName').value = CLINIC_DEFAULTS.clinicName;
+  document.getElementById('clinicAddr').value = CLINIC_DEFAULTS.clinicAddr;
+  document.getElementById('clinicPhone').value = CLINIC_DEFAULTS.clinicPhone;
+
+  // Reset dose UI to tablet mode, then update
+  updateFormDoseUI();
+  onDispensedChange();
+}
+
+// ── Field validation — red/green highlighting ──
+function isFieldValid(id){
+  const el = document.getElementById(id);
+  if(!el) return true;
+  if(el.tagName==='SELECT') return el.value!=='';
+  return el.value.trim()!=='';
+}
+
+function checkFields(){
+  const required = [
+    {id:'clinicName'}, {id:'clinicAddr'}, {id:'clinicPhone'},
+    {id:'patientName'}, {id:'species'}, {id:'ownerName'},
+    {id:'freq'}, {id:'duration'}, {id:'instructions'}
+  ];
+  required.forEach(({id})=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.style.borderColor = isFieldValid(id) ? 'var(--teal)' : '#e53e3e';
+  });
+
+  // Qty — only highlight if visible
+  const qtyEl = document.getElementById('qty');
+  if(qtyEl && qtyEl.style.display !== 'none'){
+    qtyEl.style.borderColor = qtyEl.value.trim() ? 'var(--teal)' : '#e53e3e';
+  }
+
+  // Drug search
+  const drugEl = document.getElementById('drugSearch');
+  if(drugEl){
+    const drugOk = !!(selectedDrug || drugEl.value.trim());
+    drugEl.style.borderColor = drugOk ? 'var(--teal)' : '#e53e3e';
+  }
+
+  // Vet select
+  const vetEl = document.getElementById('vetSelect');
+  if(vetEl){
+    vetEl.style.borderColor = getVetName() ? 'var(--teal)' : '#e53e3e';
+    if(vetEl.value==='other'){
+      const vetOtherEl = document.getElementById('vetOther');
+      if(vetOtherEl) vetOtherEl.style.borderColor = vetOtherEl.value.trim() ? 'var(--teal)' : '#e53e3e';
+    }
+  }
+
+  // Dose select — only if not a no-dose form
+  const doseEl = document.getElementById('doseSelect');
+  if(doseEl){
+    if(!isNoDoseForm()){
+      doseEl.style.borderColor = getDoseDisplay() ? 'var(--teal)' : '#e53e3e';
+    } else {
+      doseEl.style.borderColor = 'var(--border2)';
+    }
+  }
+}
+
+// ── Copy label text for DYMO Connect paste ─────
+function copyLabelText(){
+  const clinic  = document.getElementById('clinicName').value.trim();
+  const addr    = document.getElementById('clinicAddr').value.trim();
+  const phone   = document.getElementById('clinicPhone').value.trim();
+  const vet     = getVetName();
+  const patient = document.getElementById('patientName').value.trim();
+  const species = document.getElementById('species').value;
+  const owner   = document.getElementById('ownerName').value.trim();
+  const drug    = selectedDrug ? selectedDrug.name : document.getElementById('drugSearch').value.trim();
+  const dose    = getDoseDisplay();
+  const form    = document.getElementById('form').value;
+  const qty     = document.getElementById('qty').value.trim();
+  const instr   = document.getElementById('instructions').value.trim();
+  const rxD     = document.getElementById('rxDate').value;
+  const expD    = document.getElementById('expDate').value;
+  const warn    = document.getElementById('keepAway').checked;
+
+  function fmtD(v){
+    if(!v) return '';
+    const d = new Date(v+'T00:00:00');
+    // Very short: Apr30'26
+    const mon = d.toLocaleDateString('en-US',{month:'short'});
+    const day = d.getDate();
+    const yr  = String(d.getFullYear()).slice(2);
+    return mon+day+"'"+yr;
+  }
+
+  // 34 chars - slightly wider than confirmed working 32
+  const WRAP = 34;
+  const sep  = '─'.repeat(WRAP);
+
+  function wrap(text){
+    const out = [];
+    const words = text.split(' ');
+    let line = '';
+    words.forEach(w=>{
+      const test = (line ? line+' '+w : w);
+      if(test.length > WRAP){ if(line) out.push(line); line=w; }
+      else { line = test; }
+    });
+    if(line) out.push(line);
+    return out;
+  }
+
+  const lines = [];
+
+  // ── CLINIC
+  const clinicShort = clinic.length > WRAP ? clinic.replace('Animal Services','Animal Svc') : clinic;
+  lines.push(clinicShort.toUpperCase());
+  if(addr){
+    const addrShort = addr.replace('Road','Rd').replace('Boulevard','Blvd')
+      .replace('Avenue','Ave').replace('Street','St');
+    wrap(addrShort).forEach(l=>lines.push(l));
+  }
+  const phoneShort = phone;
+  const vetShort   = vet ? 'Dr: '+vet.replace('Dr. ','').replace(', DVM','') : '';
+  const phonevet   = [phoneShort, vetShort].filter(Boolean).join(' | ');
+  if(phonevet.length <= WRAP){ lines.push(phonevet); }
+  else { if(phoneShort) lines.push(phoneShort); if(vetShort) lines.push(vetShort); }
+  lines.push(sep);
+
+  // ── PATIENT — patient and owner on same line
+  const specStr  = species ? '('+species+')' : '';
+  const patPart  = 'Name: '+patient+(specStr?' '+specStr:'');
+  const ownPart  = owner ? 'Owner: '+owner : '';
+  const patOwner = [patPart, ownPart].filter(Boolean).join(' ');
+  if(patOwner.length <= WRAP){ lines.push(patOwner); }
+  else {
+    lines.push(patPart);
+    if(ownPart) lines.push(ownPart);
+  }
+  lines.push(sep);
+
+  // ── DRUG + QTY + SPLIT on same line
+  const drugBase = [drug, dose, form].filter(Boolean).join(' ');
+  // Add split info if applicable
+  let splitNote = '';
+  if(isTabletForm()){
+    const splitMap = {whole:'',half:'- Give 1/2 tablet',quarter:'- Give 1/4 tablet',threequarter:'- Give 3/4 tablet'};
+    splitNote = splitMap[currentSplit] || '';
+    if(splitNote){
+      const precutEl = document.querySelector('input[name="precut"]:checked');
+      const precut = precutEl ? precutEl.value : 'no';
+      splitNote += precut==='yes' ? ' (pre-cut)' : ' (cut before giving)';
+    }
+  }
+  const drugQty  = qty ? drugBase+' ('+qty+')' : drugBase;
+  wrap(drugQty).forEach(l=>lines.push(l));
+  if(splitNote) lines.push(splitNote);
+
+  // ── INSTRUCTIONS — wrapped with start time appended
+  const startText = getStartText();
+  const fullInstr = [instr, startText].filter(Boolean).join(' ');
+  if(fullInstr){
+    lines.push('');
+    wrap(fullInstr).forEach(l=>lines.push(l));
+  }
+
+  // ── DATES — separator + blank line before to clearly separate from instructions
+  const dateParts=[];
+  if(rxD)  dateParts.push('Disp:'+fmtD(rxD));
+  if(expD) dateParts.push('Exp:'+fmtD(expD));
+  if(dateParts.length){
+    lines.push(sep);
+    const dateLine = dateParts.join('  ');
+    if(dateLine.length <= WRAP){ lines.push(dateLine); }
+    else { dateParts.forEach(p=>lines.push(p)); }
+  }
+
+  // ── WARNING — compact single line
+  if(warn){
+    lines.push(sep);
+    lines.push('VET ONLY-KEEP AWAY FROM CHILDREN');
+  }
+
+  const text = lines.join('\n');
+
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = 'var(--teal)';
+    btn.style.color = '#fff';
+    setTimeout(()=>{
+      btn.textContent = '📋 Copy label text';
+      btn.style.background = 'var(--teal-light)';
+      btn.style.color = 'var(--teal)';
+    }, 2500);
+  }).catch(()=>{
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(()=>{ btn.textContent = '📋 Copy label text'; }, 2500);
+  });
+}
+
+// ── Print via DYMO Web Service ──
+
+// ── Print via DYMO Web Service (direct, no dialog) ──
+async function printLabel(){
+  checkFields();
+  const missing = [];
+  if(!document.getElementById('clinicName').value.trim()) missing.push('Clinic name');
+  if(!document.getElementById('clinicAddr').value.trim()) missing.push('Clinic address');
+  if(!document.getElementById('clinicPhone').value.trim()) missing.push('Phone number');
+  if(!getVetName()) missing.push('Veterinarian');
+  if(!document.getElementById('patientName').value.trim()) missing.push('Patient name');
+  if(!document.getElementById('species').value) missing.push('Species');
+  if(!document.getElementById('ownerName').value.trim()) missing.push('Owner name');
+  const drug = selectedDrug ? selectedDrug.name : document.getElementById('drugSearch').value.trim();
+  if(!drug) missing.push('Medication');
+  if(!document.getElementById('freq').value) missing.push('Frequency');
+  if(!document.getElementById('instructions').value.trim()) missing.push('Instructions');
+  if(!document.getElementById('qty').value.trim()) missing.push('Total quantity');
+  if(missing.length > 0){
+    alert('Please complete highlighted fields before printing:\n\n• ' + missing.join('\n• '));
+    return;
+  }
+
+  // Try DYMO web service first
+  const dymoWorked = await tryDymoPrint();
+  if(!dymoWorked){
+    // Fallback: clean popup print
+    popupPrint();
+  }
+}
+
+async function tryDymoPrint(){
+  try{
+    // Check if DYMO web service is running
+    const check = await fetch('https://127.0.0.1:41951/DYMO/DLS/Printing/GetPrinters', {
+      method:'GET', mode:'cors'
+    }).catch(()=>null);
+
+    if(!check || !check.ok) return false;
+
+    const printerXml = await check.text();
+    // Extract first LabelWriter printer name
+    const match = printerXml.match(/<Name>([^<]+)<\/Name>/);
+    if(!match) return false;
+    const printerName = match[1];
+
+    // Build the label XML for 30324
+    const labelXml = buildDymoLabelXml();
+
+    // Send print job
+    const params = new URLSearchParams();
+    params.append('printerName', printerName);
+    params.append('labelXml', labelXml);
+    params.append('printParamsXml', '<LabelWriterPrintParams><Copies>1</Copies></LabelWriterPrintParams>');
+
+    const resp = await fetch('https://127.0.0.1:41951/DYMO/DLS/Printing/PrintLabel', {
+      method:'POST', mode:'cors', body: params
+    });
+
+    if(resp.ok){ alert('✓ Label sent to DYMO printer!'); return true; }
+    return false;
+  } catch(e){
+    return false;
+  }
+}
+
+function buildDymoLabelXml(){
+  // 30324: 70mm wide × 54mm tall = 3969 × 3061 twips, Landscape
+  // Landscape: Width=3969 (70mm), Height=3061 (54mm)
+  const LW = 3969; const LH = 3061;
+  const M = 110; const CW = LW - M*2;
+
+  const clinic  = esc(document.getElementById('clinicName').value.trim());
+  const addr    = esc(document.getElementById('clinicAddr').value.trim());
+  const phone   = esc(document.getElementById('clinicPhone').value.trim());
+  const vet     = esc(getVetName());
+  const patient = esc(document.getElementById('patientName').value.trim());
+  const species = esc(document.getElementById('species').value);
+  const owner   = esc(document.getElementById('ownerName').value.trim());
+  const drugName= esc(selectedDrug ? selectedDrug.name : document.getElementById('drugSearch').value.trim());
+  const dose    = esc(getDoseDisplay());
+  const form    = esc(document.getElementById('form').value);
+  const qty     = esc(document.getElementById('qty').value.trim());
+  const instr   = esc(document.getElementById('instructions').value.trim());
+  const rxD     = document.getElementById('rxDate').value;
+  const expD    = document.getElementById('expDate').value;
+  const warn    = document.getElementById('keepAway').checked;
+
+  function fmtD(v){ if(!v)return''; const d=new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+  const addrLine  = [addr, phone, vet].filter(Boolean).join('  |  ');
+  const patLine   = ['Patient: '+patient, species?'('+species+')':''].filter(Boolean).join(' ');
+  const ownerLine = owner ? 'Owner: '+owner : '';
+  const drugLine  = [drugName, dose, form].filter(Boolean).join(' ');
+  const qtyLine   = qty ? 'Qty: '+qty : '';
+  const dateLine  = [rxD?'Disp: '+fmtD(rxD):'', expD?'Exp: '+fmtD(expD):''].filter(Boolean).join('     ');
+  const warnLine  = warn ? 'VETERINARY USE ONLY — KEEP OUT OF REACH OF CHILDREN' : '';
+
+  function tObj(name, text, x, y, w, h, size, bold, align){
+    if(!text) return '';
+    return `<ObjectInfo>
+  <TextObject>
+    <Name>${name}</Name>
+    <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>
+    <BackColor Alpha="0" Red="255" Green="255" Blue="255"/>
+    <LinkedObjectName/>
+    <Rotation>Rotation0</Rotation>
+    <IsMirrored>False</IsMirrored>
+    <IsVariable>False</IsVariable>
+    <HorizontalAlignment>${align}</HorizontalAlignment>
+    <VerticalAlignment>Top</VerticalAlignment>
+    <TextFitMode>None</TextFitMode>
+    <UseFullFontHeight>True</UseFullFontHeight>
+    <Verticalized>False</Verticalized>
+    <StyledText><Element>
+      <String>${text}</String>
+      <Attributes><Font Family="Courier New" Size="${size}" Bold="${bold}" Italic="False" Underline="False" Strikeout="False"/>
+      <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/></Attributes>
+    </Element></StyledText>
+  </TextObject>
+  <Bounds X="${x}" Y="${y}" Width="${w}" Height="${h}"/>
+</ObjectInfo>`;
+  }
+
+  let y = M; const objs = [];
+  objs.push(tObj('Clinic',  clinic,    M, y, CW, 155, 8, 'True',  'Center')); y+=155;
+  objs.push(tObj('Addr',    addrLine,  M, y, CW, 120, 6, 'False', 'Center')); y+=130;
+  objs.push(tObj('Pat',     patLine,   M, y, CW, 130, 7, 'True',  'Left'));   y+=130;
+  objs.push(tObj('Own',     ownerLine, M, y, CW, 120, 7, 'True',  'Left'));   y+=ownerLine?125:0;
+  objs.push(tObj('Drug',    drugLine,  M, y, CW, 160, 9, 'True',  'Left'));   y+=160;
+  objs.push(tObj('Qty',     qtyLine,   M, y, CW, 120, 7, 'True',  'Left'));   y+=qtyLine?120:0;
+  const instrH = Math.max(350, LH - y - 260);
+  objs.push(tObj('Instr',   instr,     M, y, CW, instrH,7,'True', 'Left'));   y+=instrH+10;
+  objs.push(tObj('Dates',   dateLine,  M, y, CW, 120, 7, 'True',  'Left'));   y+=120;
+  objs.push(tObj('Warn',    warnLine,  M, y, CW, 120, 6, 'True',  'Center'));
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<DieCutLabel Version="8.0" Units="twips">
+  <PaperOrientation>Landscape</PaperOrientation>
+  <Id>LargeMultipurpose</Id>
+  <PaperName>30324 Large Multipurpose</PaperName>
+  <DrawCommands><RoundRectangle X="0" Y="0" Width="${LH}" Height="${LW}" Rx="0" Ry="0"/></DrawCommands>
+  ${objs.filter(Boolean).join('\n  ')}
+</DieCutLabel>`;
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function popupPrint(){
+  const labelHTML = document.getElementById('labelPreview').outerHTML;
+  const instrSize = 8;
+  const popup = window.open('','_blank','width=400,height=350,toolbar=no,menubar=no,scrollbars=no');
+  popup.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rx Label</title>
+<style>
+@page{size:2.756in 2.126in landscape;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;margin:0;padding:0}
+.label-preview{background:#fff;width:2.756in;height:2.126in;padding:5px 8px;font-family:'Courier New',Courier,monospace;color:#000;display:flex;flex-direction:column;font-weight:bold;overflow:hidden}
+.lp-divider{border:none;border-top:1px solid #000;margin:3px 0}
+.lp-section-clinic{margin-bottom:1px}
+.lp-clinic-name{font-size:9px;font-weight:bold;text-align:center;text-transform:uppercase;letter-spacing:.3px;line-height:1.3;color:#000}
+.lp-clinic-sub{font-size:7.5px;text-align:center;color:#000;line-height:1.3;font-weight:bold}
+.lp-section-patient{margin-bottom:1px}
+.lp-section-drug{display:flex;flex-direction:column;flex:1;min-height:0}
+.lp-drug{font-size:11px;font-weight:bold;margin-bottom:1px;line-height:1.2;color:#000}
+.lp-sub{font-size:8px;margin-bottom:1px;color:#000;line-height:1.2;font-weight:bold}
+.lp-line{font-size:9.5px;margin-bottom:1px;color:#000;line-height:1.25;font-weight:bold}
+.lp-instr{font-size:${instrSize}px;color:#000;line-height:1.45;flex:1;overflow:hidden;font-weight:bold;margin-top:4px}
+.lp-warn{font-size:7px;font-weight:bold;text-align:center;border:2px solid #000;padding:2px 4px;letter-spacing:.3px;margin-top:3px;flex-shrink:0;color:#000;white-space:nowrap;overflow:hidden}
+.lp-dates-row{display:flex;justify-content:space-between;margin-top:2px;flex-shrink:0}
+.lp-dates-row span{font-size:9px;color:#000;font-weight:bold}
+</style></head><body>${labelHTML}
+<script>window.onload=function(){window.print();setTimeout(function(){window.close();},2000);};<\/script>
+</body></html>`);
+  popup.document.close();
+}
+
+// ── Init ───────────────────────────────────────
+// Disable browser autocomplete/autofill on all text inputs
+document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el=>{
+  el.setAttribute('autocomplete','off');
+  el.setAttribute('autocorrect','off');
+  el.setAttribute('autocapitalize','off');
+  el.setAttribute('spellcheck','false');
+});
+document.getElementById('rxDate').valueAsDate = new Date();
+onDispensedChange();
+updateFormDoseUI();
+</script>
+<footer style="text-align:center;padding:10px 20px;font-size:10px;color:#6b7a99;font-family:'DM Mono',monospace;border-top:1px solid #b0bad4;margin-top:8px;background:#c8d4e8;line-height:1.6">
+  © 2026 All rights reserved. Unauthorized copying, modification, or redistribution prohibited.<br>
+  This tool is provided as a convenience aid only. All medication doses and instructions must be verified by a licensed veterinarian before use. No liability is assumed for errors or outcomes resulting from use of this tool.
+</footer>
+</body>
+</html>
