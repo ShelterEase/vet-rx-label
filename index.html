@@ -1753,22 +1753,10 @@ function copyLabelText(){
   }
   lines.push(sep);
 
-  // ── DRUG + QTY + SPLIT on same line
+  // ── DRUG + QTY on same line
   const drugBase = [drug, dose, form].filter(Boolean).join(' ');
-  // Add split info if applicable
-  let splitNote = '';
-  if(isTabletForm()){
-    const splitMap = {whole:'',half:'- Give 1/2 tablet',quarter:'- Give 1/4 tablet',threequarter:'- Give 3/4 tablet'};
-    splitNote = splitMap[currentSplit] || '';
-    if(splitNote){
-      const precutEl = document.querySelector('input[name="precut"]:checked');
-      const precut = precutEl ? precutEl.value : 'no';
-      splitNote += precut==='yes' ? ' (pre-cut)' : ' (cut before giving)';
-    }
-  }
   const drugQty  = qty ? drugBase+' ('+qty+')' : drugBase;
   wrap(drugQty).forEach(l=>lines.push(l));
-  if(splitNote) lines.push(splitNote);
 
   // ── INSTRUCTIONS — wrapped with start time appended
   const startText = getStartText();
